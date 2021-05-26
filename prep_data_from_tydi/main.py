@@ -57,29 +57,32 @@ def jsonl_loader(jsonl_path):
 
 def print_lang_stats(jsonl_path, print_out=False):
     lang2num = defaultdict(int)
+    lang2query_list = defaultdict(list)
     for lang, question, _ in jsonl_loader(jsonl_path):
         lang2num[lang] += 1
+        lang2query_list[lang].append(question)
     
     if print_out:
-        for lang, num in lang2num.items():
-            print(f"{lang:>10}\t{num}")
+        print(f"{'Language':>10}{'Total No.':>10}{'Uniq. No.':>10}{'Dup. No.':>10}")
+        for lang in sorted(lang2num):
+            num = lang2num[lang]
+            queries, uniq_queries = lang2query_list[lang], set(lang2query_list[lang])
+            uniq_num = len([q for q in uniq_queries if queries.count(q) == 1])
+            dup_num = len([q for q in uniq_queries if queries.count(q) > 1])
+
+            print(f"{lang:>10}{num:>10}{uniq_num:>10}{dup_num:>10}")
 
     return lang2num
 
 
 def prepare_doc2id_from_wiki(wiki_json, output_dir, prepare_trec_coll=True):
     wiki_dir, name = os.path.dirname(wiki_json), os.path.basename(wiki_json).split("-")[0] 
-    # tmp_json_file = os.path.join(wiki_dir, f"{name}.wikIR-parsed.json")
     doc2id_file = os.path.join(output_dir, f"{name}.doc2id.tsv")
     if prepare_trec_coll:
         coll_file = os.path.join(output_dir, f"{name}.trec.collection.txt")
         coll_file_f = open(coll_file, "w") 
 
     print(f"Preparing collection from {name}...")
-    # todo: instead of 'magic' 10G, give it exact the value of $wiki_xml? 
-    # cmd = f"wikiextractor --output {tmp_json_file} --bytes 10G --links --quiet --json {wiki_xml}" 
-    # print(cmd)
-    # subprocess.run(cmd.split())
 
     with open(wiki_json) as f, open(doc2id_file, "w") as fout:
         for line in f: 
@@ -131,8 +134,6 @@ def prepare_benchmarks_from_tydi(tydi_dir, lang2doc2id, output_dir):
         lang2qrels[lang] = defaultdict(dict) 
         lang2folds[lang] = {"train": set(), "dev": set()}
 
-    # fns = ["tydiqa-v1.0-train.jsonl", "tydiqa-v1.0-dev.jsonl"]
-    # for fn in fns:
     sets = ["train", "dev"]
     for set_name in sets: 
         fn = f"tydiqa-v1.0-{set_name}.jsonl"
@@ -191,7 +192,6 @@ def main(args):
 
     lang2doc2id = {}
     for lang in LANGS:
-        # wiki_fn = os.path.join(wiki_dir, f"{lang}wiki-20190201-pages-articles-multistream.xml") 
         wiki_fn = os.path.join(wiki_dir, f"{lang}wiki.20190201.json")
         doc2id_fn = prepare_doc2id_from_wiki(wiki_json=wiki_fn, output_dir=doc2id_output_dir)
         lang2doc2id[lang] = load_doc2id(doc2id_fn)
