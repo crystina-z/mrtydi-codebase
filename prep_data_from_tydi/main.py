@@ -12,7 +12,7 @@ from nirtools.ir import write_qrels
 from capreolus.utils.trec import topic_to_trectxt, document_to_trectxt
 
 
-LANGS = ["bn"] 
+LANGS = ["bn", "ar"]
 lang2lang = {
     "thai": "th", 
     "swahili": "sw", 
@@ -21,7 +21,7 @@ lang2lang = {
     "bengali": "bn", 
     "russian": "ru", 
     "japanese": "ja",
-    "arabic": "ar" 
+    "arabic": "ar",
     "indonesian": "id", 
     "korean": "ko", 
     "english": "en", 
@@ -47,7 +47,7 @@ def jsonl_loader(jsonl_path):
         for line in f:
             line = json.loads(line)
             question = line["question_text"]
-            doc_title, doc_url = line["document_title"], line["document_title"]
+            doc_title, doc_url = line["document_title"], line["document_url"]
             lang = line["language"]
 
             # doc = line["document_plaintext"]
@@ -104,16 +104,16 @@ def prepare_doc2id_from_wiki(wiki_json, output_dir, prepare_trec_coll=True):
 
 def load_doc2id(doc2id_tsv):
     """ Load {url: {title: docid}} from the tsv file of format `url title  docid` per line """
-    url2title2docid = defaultdict(dict)
+    url2title2docid = {}
     with open(doc2id_tsv) as f:
         for line in f:
             url, title, docid = line.strip().split("\t") 
-            if url in url2title2docid and title in url2title2docid[url]:
+            if title in url2title2docid:
                 import pdb
                 pdb.set_trace()
                 raise Value(f"Duplicate key pairs: {url} {title}")
 
-            url2title2docid[url][title] = docid 
+            url2title2docid[title] = docid
     return url2title2docid
 
 
@@ -139,17 +139,18 @@ def prepare_benchmarks_from_tydi(tydi_dir, lang2doc2id, output_dir):
 
         jsonl_path = os.path.join(tydi_dir, fn) 
         for lang, question, (doc_url, doc_title) in jsonl_loader(jsonl_path):
-            if lang2lang[lang] not in LANGS:
+            lang = lang2lang[lang]
+            if lang not in LANGS:
                 continue
 
             # add to topic
             if question not in lang2topics[lang]:
-                lang2topics[lang][question] = len(topics) 
+                lang2topics[lang][question] = len(lang2topics[lang])
 
             qid = lang2topics[lang][question]
-            docid = lang2doc2id[lang].get(doc_url, {}).get(doc_title, None) 
+            docid = lang2doc2id[lang].get(doc_title)
             if docid is None:
-                print(f"Warning: could not find doc id for {doc_url}, {doc_title}")
+                print(f"Warning: could not find doc id for {doc_title}")
                 continue
 
             # todo: is this true? all documents appearing here are relevant? 
@@ -157,15 +158,23 @@ def prepare_benchmarks_from_tydi(tydi_dir, lang2doc2id, output_dir):
             lang2folds[lang][set_name].add(qid)  # add to folds
 
     for lang in LANGS:
-        print(f"Dumping benchmark files of {lang}...")
         lang_dir = os.path.join(output_dir, lang)
         os.makedirs(lang_dir, exist_ok=True)
 
+        topic_fn, qrel_fn, fold_fn = \
+            os.path.join(lang_dir, "topic.tsv"), os.path.join(lang_dir, "qrels.txt"), os.path.join(lang_dir, "folds.json")
+
+        if all([os.path.exists(fn) for fn in [topic_fn, qrel_fn, fold_fn]]):
+            print(f"all files found for {lang}. skip")
+            continue
+
+        print(f"Dumping benchmark files of {lang}...")
+
         topics, qrels, folds = lang2topics[lang], lang2qrels[lang], lang2folds[lang]
         folds = {k: list(v) for k, v in folds.items()}
-        write_to_topic_tsv(topics, os.path.join(lang_dir, "topic.tsv"))
-        write_qrels(qrels, os.path.join(lang_dir, "qrels.txt"))
-        json.dump(folds, open(os.path.join(lang_dir, "folds.json"), "w"))
+        write_to_topic_tsv(topics, topic_fn)
+        write_qrels(qrels, qrel_fn)
+        json.dump(folds, open(fold_fn, "w"))
 
 
 def main(args):
