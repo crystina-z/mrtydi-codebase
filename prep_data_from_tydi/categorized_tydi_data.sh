@@ -8,8 +8,8 @@ mkdir -p $tydi_has_no_pos_label_dir
 for set_name in 'train' 'dev'
 do	
 	
-	cat "${tydi_dir}/tydiqa-v1.0-${set_name}.jsonl" | grep -v '{"candidate_index":-1}' > "${tydi_has_pos_label_dir}/tydiqa-v1.0-${set_name}.jsonl"
-	cat "${tydi_dir}/tydiqa-v1.0-${set_name}.jsonl" | grep '{"candidate_index":-1}' > "${tydi_has_no_pos_label_dir}/tydiqa-v1.0-${set_name}.jsonl"
+	cat "${tydi_dir}/tydiqa-v1.0-${set_name}.jsonl" | grep -v '"passage_answer":{"candidate_index":-1},"yes_no_answer":"NONE"}' > "${tydi_has_pos_label_dir}/tydiqa-v1.0-${set_name}.jsonl"
+	cat "${tydi_dir}/tydiqa-v1.0-${set_name}.jsonl" | grep '"passage_answer":{"candidate_index":-1},"yes_no_answer":"NONE"}' > "${tydi_has_no_pos_label_dir}/tydiqa-v1.0-${set_name}.jsonl"
 
 	wc -l "${tydi_has_pos_label_dir}/tydiqa-v1.0-${set_name}.jsonl"
 	wc -l "${tydi_has_no_pos_label_dir}/tydiqa-v1.0-${set_name}.jsonl"
