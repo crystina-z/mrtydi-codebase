@@ -12,8 +12,9 @@ from nirtools.ir import write_qrels
 from capreolus.utils.trec import topic_to_trectxt, document_to_trectxt
 
 
-LANGS = ["bn", "ar"]
-lang2lang = {
+os_join = os.path.join
+# LANGS = ["bn", "ar"]
+lang_full2short = {
     "thai": "th", 
     "swahili": "sw", 
     "telugu": "te",
@@ -26,12 +27,14 @@ lang2lang = {
     "korean": "ko", 
     "english": "en", 
 }
+lang_short2full = {v: k for k, v in lang_full2short.items()}
+LANGS = sorted(lang_full2short)
 
 def get_args():
     parser = ArgumentParser()
     parser.add_argument(
         "--tydi_dir", type=str, required=True, 
-        help="The directory that contain the train and dev jsonl of TyDi dataset.")
+        help="The directory that contain the grouped train and dev jsonl of each language's TyDi dataset.")
     parser.add_argument(
         "--wiki_dir", type=str, required=True, 
         help="The directory that contain the unziped wikipedia file of all languages")
@@ -42,82 +45,61 @@ def get_args():
     return parser.parse_args()
 
 
-def jsonl_loader(jsonl_path):
+def jsonl_loader(jsonl_path, expected_lang):
+    """ 
+    since we only care about passages at this moment, 
+    the "yes_no_anwser" and "minimal_answer" fields are ignored
+    """ 
     with open(jsonl_path) as f:
         for line in f:
             line = json.loads(line)
             question = line["question_text"]
-            doc_title, doc_url = line["document_title"], line["document_url"]
-            lang = line["language"]
+            assert expected_lang == line["language"], f"expect {expected_lang} but got {line['language']}"
 
-            # doc = line["document_plaintext"]
-            # todo: what does 'annotation' and 'passage_answer_candidates' mean respectively?
-            yield lang, question, (doc_url, doc_title)
+            doc, doc_title = line["document_plaintext"], line["document_title"]
+            annotations, passage_answer_candidates = line["annotations"], line["passage_answer_candidates"]
 
+            rel_indexes = [a["passage_answer"]["candidate_index"] for a in annotations]
+            passages = [
+                " ".join(
+                    doc[span["plaintext_start_byte"]:span["plaintext_end_byte"] + 1].replace("\n", " ").split()
+                )
+                for span in passage_answer_candidates
+            ]
+            passages = [p for p in passages if p != ""] 
 
-def print_lang_stats(jsonl_path, print_out=False):
-    lang2num = defaultdict(int)
-    lang2query_list = defaultdict(list)
-    for lang, question, _ in jsonl_loader(jsonl_path):
-        lang2num[lang] += 1
-        lang2query_list[lang].append(question)
-    
-    if print_out:
-        print(f"{'Language':>10}{'Total No.':>10}{'Uniq. No.':>10}{'Dup. No.':>10}")
-        for lang in sorted(lang2num):
-            num = lang2num[lang]
-            queries, uniq_queries = lang2query_list[lang], set(lang2query_list[lang])
-            uniq_num = len([q for q in uniq_queries if queries.count(q) == 1])
-            dup_num = len([q for q in uniq_queries if queries.count(q) > 1])
-
-            print(f"{lang:>10}{num:>10}{uniq_num:>10}{dup_num:>10}")
-
-    return lang2num
+            yield question, doc_title, passages, rel_indexes 
 
 
-def prepare_doc2id_from_wiki(wiki_json, output_dir, prepare_trec_coll=True):
-    wiki_dir, name = os.path.dirname(wiki_json), os.path.basename(wiki_json).split("-")[0] 
-    doc2id_file = os.path.join(output_dir, f"{name}.doc2id.tsv")
-    if prepare_trec_coll:
-        coll_file = os.path.join(output_dir, f"{name}.trec.collection.txt")
-        coll_file_f = open(coll_file, "w") 
+def segment_wiki_doc(doc):
+    # todo: this code is a rough simulation of how TyDi does it, 
+    # pending to change - https://github.com/google-research-datasets/tydiqa/issues/11 
+    doc = doc.replace("\n\n\n", "") # this \n\n\n probably indicate a removed table etc?
+    passages = [p for p in doc.split("\n\n") if p != ""]
+    return passages
 
-    print(f"Preparing collection from {name}...")
 
-    with open(wiki_json) as f, open(doc2id_file, "w") as fout:
+def load_psg_dict_from_wiki_json(wiki_json): 
+    title2_id_psgs = {} 
+    with open(wiki_json) as f:
         for line in f: 
             line = json.loads(line) 
-            docid, url, title = line["id"], line["url"], line["title"]
-            fout.write(f"{url}\t{title}\t{docid}\n")
+            docid, url, title, doc = line["id"], line["url"], line["title"], line["text"]
 
-            if prepare_trec_coll:
-                doc = line["text"]
-                try:
-                    doc = fromstring(doc).text_content()
-                except Exception as e:
-                    print(docid, len(doc))
-                doc.lstrip(title)
-                coll_file_f.write(document_to_trectxt(docid, doc)) 
+            # assert title not in title2_id_psgs, f"Got duplicate Wikipedia article, {title}" 
+            try:
+                doc = fromstring(doc).text_content()
+            except Exception as e:
+                print(docid, len(doc))
 
-    if prepare_trec_coll:
-        coll_file_f.close()
+            doc.lstrip(title)
 
-    return doc2id_file
+            # (1) use the in parsed wiki as doc id; 
+            # identify the passage via \n
+            passages = segment_wiki_doc(doc)
+            title2_id_psgs[title] = (docid, passages) 
 
-
-def load_doc2id(doc2id_tsv):
-    """ Load {url: {title: docid}} from the tsv file of format `url title  docid` per line """
-    url2title2docid = {}
-    with open(doc2id_tsv) as f:
-        for line in f:
-            url, title, docid = line.strip().split("\t") 
-            if title in url2title2docid:
-                import pdb
-                pdb.set_trace()
-                raise Value(f"Duplicate key pairs: {url} {title}")
-
-            url2title2docid[title] = docid
-    return url2title2docid
+    return title2_id_psgs 
 
 
 def write_to_topic_tsv(topic2id, outp_topic_tsv):
@@ -126,56 +108,90 @@ def write_to_topic_tsv(topic2id, outp_topic_tsv):
             f.write(f"{qid}\t{topic}\n")
 
 
-def prepare_benchmarks_from_tydi(tydi_dir, lang2doc2id, output_dir):
-    lang2topics, lang2qrels, lang2folds = {}, {}, {} 
-    # init
-    for lang in LANGS:
-        lang2topics[lang] = {} 
-        lang2qrels[lang] = defaultdict(dict) 
-        lang2folds[lang] = {"train": set(), "dev": set()}
+def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
+    """
+    :params tydi_dir: the directory that contains the train and dev jsonl files of a single language  
+    :params output_dir: the language-specific directory that we will output:
+        (1) collection file
+        (2) topic file
+        (3) qrel file
+        (4) folds file
+        (5) id2passage mapping file 
+    """
+
+    topics = {} 
+    passage2id = {} 
+    qrels = defaultdict(dict) 
+    folds = {"train": set(), "dev": set()}
 
     sets = ["train", "dev"]
     for set_name in sets: 
-        fn = f"tydiqa-v1.0-{set_name}.jsonl"
+        fn = f"tydiqa-v1.0-{set_name}.{lang}.jsonl"
+        jsonl_path = os_join(tydi_dir, fn) 
 
-        jsonl_path = os.path.join(tydi_dir, fn) 
-        for lang, question, (doc_url, doc_title) in jsonl_loader(jsonl_path):
-            lang = lang2lang[lang]
-            if lang not in LANGS:
-                continue
-
+        n_unfound_doc = 0
+        for question, doc_title, passages, rel_indexes in jsonl_loader(jsonl_path, expected_lang=lang):
             # add to topic
-            if question not in lang2topics[lang]:
-                lang2topics[lang][question] = len(lang2topics[lang])
+            if question not in topics:
+                topics[question] = len(topics) 
 
-            qid = lang2topics[lang][question]
-            docid = lang2doc2id[lang].get(doc_title)
+            qid = topics[question]
+
+            docid, wiki_passages = wiki_psg_dict.get(doc_title, (None, None))  # todo: verify if wiki_doc == doc
             if docid is None:
-                print(f"Warning: could not find doc id for {doc_title}")
-                continue
+                n_unfound_doc += 1
+                continue 
 
-            # todo: is this true? all documents appearing here are relevant? 
-            lang2qrels[lang][qid][docid] = 1  # add to qrels 
-            lang2folds[lang][set_name].add(qid)  # add to folds
+            # add to folds and qrels
+            folds[set_name].add(qid)
+            for rel_id in rel_indexes:
+                passage_id = f"{docid}-{rel_id}"
+                qrels[qid][passage_id] = 1 
 
-    for lang in LANGS:
-        lang_dir = os.path.join(output_dir, lang)
-        os.makedirs(lang_dir, exist_ok=True)
+            # parse passages
+            # if wiki_passages != passages:  # todo: how to really replicate this
+            #     import pdb
+            #     pdb.set_trace()
 
-        topic_fn, qrel_fn, fold_fn = \
-            os.path.join(lang_dir, "topic.tsv"), os.path.join(lang_dir, "qrels.txt"), os.path.join(lang_dir, "folds.json")
+            # overwrite our own wiki psg with the official ones 
+            wiki_psg_dict[doc_title] = (docid, passages) 
 
-        if all([os.path.exists(fn) for fn in [topic_fn, qrel_fn, fold_fn]]):
-            print(f"all files found for {lang}. skip")
-            continue
+        print(f"Number of Unfound Wikipedia doc in {set_name}: {n_unfound_doc}")
 
+
+    # write to files
+    def all_fn_exists(fns):
+        return all([os.path.exists(fn) for fn in fns]) 
+
+    lang_dir = os_join(output_dir, lang)
+    os.makedirs(lang_dir, exist_ok=True)
+
+    topic_fn, qrel_fn, fold_fn = \
+        os_join(lang_dir, "topic.tsv"), os_join(lang_dir, "qrels.txt"), os_join(lang_dir, "folds.json")
+    coll_fn, id2passage_fn = \
+        os_join(lang_dir, "collection.txt"), os_join(lang_dir, "pid2passage.tsv")
+        
+    if all_fn_exists([topic_fn, qrel_fn, fold_fn]): 
+        print(f"all benchmark files found for {lang}. skip")
+    else:
         print(f"Dumping benchmark files of {lang}...")
-
-        topics, qrels, folds = lang2topics[lang], lang2qrels[lang], lang2folds[lang]
         folds = {k: list(v) for k, v in folds.items()}
         write_to_topic_tsv(topics, topic_fn)
         write_qrels(qrels, qrel_fn)
         json.dump(folds, open(fold_fn, "w"))
+
+    print(f"Dumping benchmark files of {lang}...")
+    if all_fn_exists([coll_fn, id2passage_fn]):
+        print(f"all collection files found for {lang}. skip")
+    else:
+        print(f"Dumping collection files of {lang}...")
+        wiki_psg_sorted = sorted(wiki_psg_dict.items(), key=lambda kv: int(kv[1][0]))  # sort according to docid
+        with open(id2passage_fn, "w") as id2psg_f, open(coll_fn, "w") as coll_f: 
+            for title, (docid, passages) in wiki_psg_sorted:
+                id2psg_f.write(f"{docid}\t{title}\n")
+                for i, passage in enumerate(passages):
+                    passage_id = f"{docid}-{i}"
+                    coll_f.write(document_to_trectxt(passage_id, passage))  
 
 
 def main(args):
@@ -187,28 +203,25 @@ def main(args):
     wiki_dir, tydi_dir = args.wiki_dir, args.tydi_dir
     output_dir = args.output_dir
 
-    doc2id_output_dir = os.path.join(output_dir, "doc2id") 
+    doc2id_output_dir = os_join(output_dir, "doc2id") 
     os.makedirs(doc2id_output_dir, exist_ok=True)
 
     lang2doc2id = {}
-    for lang in LANGS:
-        wiki_fn = os.path.join(wiki_dir, f"{lang}wiki.20190201.json")
-        doc2id_fn = prepare_doc2id_from_wiki(wiki_json=wiki_fn, output_dir=doc2id_output_dir)
-        lang2doc2id[lang] = load_doc2id(doc2id_fn)
-    
-    prepare_benchmarks_from_tydi(tydi_dir=tydi_dir, lang2doc2id=lang2doc2id, output_dir=output_dir)
-
-
-def print_stats_main(args):
-    tydi_dir = args.tydi_dir
-    print(">>> dev set <<")
-    print_lang_stats(os.path.join(tydi_dir, f"tydiqa-v1.0-dev.jsonl"), print_out=True)
-
-    print(">>> train set <<")
-    print_lang_stats(os.path.join(tydi_dir, f"tydiqa-v1.0-train.jsonl"), print_out=True)
+    # for lang in LANGS:
+    #     print(f"*** processing {lang} ***")
+    #     if lang in ["english", "korean", "japanese", "russian", "arabic", "bengali", "finnish", "indonesian"]:
+    #         continue
+    for lang in ["english", "russian"]:
+        try:
+            wiki_fn = os_join(wiki_dir, f"{lang_full2short[lang]}wiki.20190201.json")
+            title2_id_psgs = load_psg_dict_from_wiki_json(wiki_json=wiki_fn)
+            prepare_dataset_from_tydi(
+                lang, tydi_dir, wiki_psg_dict=title2_id_psgs, output_dir=output_dir)
+        except Exception as e:
+            print(f"Encounter the following exception when processing {lang}")
+            print(e)
 
 
 if __name__ == "__main__":
     args = get_args()
     main(args)
-    # print_stats_main(args)
