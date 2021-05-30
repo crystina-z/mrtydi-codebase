@@ -3,8 +3,8 @@ import json
 import subprocess
 
 from pprint import pprint 
-from collections import defaultdict
 from argparse import ArgumentParser
+from collections import defaultdict, OrderedDict
 
 from tqdm import tqdm
 from lxml.html import fromstring
@@ -14,7 +14,7 @@ from capreolus.utils.trec import topic_to_trectxt, document_to_trectxt
 
 os_join = os.path.join
 # LANGS = ["bn", "ar"]
-lang_full2short = {
+lang_full2short = OrderedDict({
     "thai": "th", 
     "swahili": "sw", 
     "telugu": "te",
@@ -26,9 +26,9 @@ lang_full2short = {
     "indonesian": "id", 
     "korean": "ko", 
     "english": "en", 
-}
+})
 lang_short2full = {v: k for k, v in lang_full2short.items()}
-LANGS = sorted(lang_full2short)
+LANGS = lang_full2short
 
 def get_args():
     parser = ArgumentParser()
@@ -59,16 +59,22 @@ def jsonl_loader(jsonl_path, expected_lang):
             doc, doc_title = line["document_plaintext"], line["document_title"]
             annotations, passage_answer_candidates = line["annotations"], line["passage_answer_candidates"]
 
-            rel_indexes = [a["passage_answer"]["candidate_index"] for a in annotations]
+            # nonrel_indexes = [
+            #     a["passage_answer"]["candidate_index"] for a in annotations if a["passage_answer"]["candidate_index"] == -1]
             passages = [
                 " ".join(
                     doc[span["plaintext_start_byte"]:span["plaintext_end_byte"] + 1].replace("\n", " ").split()
                 )
                 for span in passage_answer_candidates
             ]
-            passages = [p for p in passages if p != ""] 
+            rel_indexes = [
+                a["passage_answer"]["candidate_index"] for a in annotations if a["passage_answer"]["candidate_index"] != -1]
+            rel_indexes = list({
+                index for index in rel_indexes if passages[index] != ""})
 
-            yield question, doc_title, passages, rel_indexes 
+            # Warning: passage cannot be filter out here! since we will ned to use re_indexes to identify the passage later
+            # passages = [p for p in passages if p != ""]
+            yield question, doc_title, passages, rel_indexes
 
 
 def segment_wiki_doc(doc):
@@ -149,10 +155,6 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
                 qrels[qid][passage_id] = 1 
 
             # parse passages
-            # if wiki_passages != passages:  # todo: how to really replicate this
-            #     import pdb
-            #     pdb.set_trace()
-
             # overwrite our own wiki psg with the official ones 
             wiki_psg_dict[doc_title] = (docid, passages) 
 
@@ -180,7 +182,6 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
         write_qrels(qrels, qrel_fn)
         json.dump(folds, open(fold_fn, "w"))
 
-    print(f"Dumping benchmark files of {lang}...")
     if all_fn_exists([coll_fn, id2passage_fn]):
         print(f"all collection files found for {lang}. skip")
     else:
@@ -208,18 +209,20 @@ def main(args):
 
     lang2doc2id = {}
     # for lang in LANGS:
-    #     print(f"*** processing {lang} ***")
-    #     if lang in ["english", "korean", "japanese", "russian", "arabic", "bengali", "finnish", "indonesian"]:
-    #         continue
-    for lang in ["english", "russian"]:
-        try:
-            wiki_fn = os_join(wiki_dir, f"{lang_full2short[lang]}wiki.20190201.json")
-            title2_id_psgs = load_psg_dict_from_wiki_json(wiki_json=wiki_fn)
-            prepare_dataset_from_tydi(
-                lang, tydi_dir, wiki_psg_dict=title2_id_psgs, output_dir=output_dir)
-        except Exception as e:
-            print(f"Encounter the following exception when processing {lang}")
-            print(e)
+    for lang in ["thai"]:
+        print(f"*** processing {lang} ***")
+        # if lang in ["bengali", "finnish", "thai", "swahili", "telugu"]:
+                # continue
+        # if lang in ["english", "russian", "arabic", "indonesian"]:
+        #     continue
+        # try:
+        wiki_fn = os_join(wiki_dir, f"{lang_full2short[lang]}wiki.20190201.json")
+        title2_id_psgs = load_psg_dict_from_wiki_json(wiki_json=wiki_fn)
+        prepare_dataset_from_tydi(
+            lang, tydi_dir, wiki_psg_dict=title2_id_psgs, output_dir=output_dir)
+        # except Exception as e:
+        #     print(f"Encounter the following exception when processing {lang}")
+        #     print(e)
 
 
 if __name__ == "__main__":
