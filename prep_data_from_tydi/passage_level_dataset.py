@@ -144,6 +144,7 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
             qid = topics[question]
 
             docid, wiki_passages = wiki_psg_dict.get(doc_title, (None, None))  # todo: verify if wiki_doc == doc
+
             if docid is None:
                 n_unfound_doc += 1
                 continue 
@@ -161,6 +162,13 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
         print(f"Number of Unfound Wikipedia doc in {set_name}: {n_unfound_doc}")
 
 
+    # post-process folds
+    n_dup = len(folds["train"] & folds["dev"])
+    # folds["train"] = folds["train"] - folds["dev"]
+    folds["dev"] = folds["dev"] - folds["train"]
+    folds = {k: list(v) for k, v in folds.items()}
+    print(f"Removed {n_dup} duplicate qids between train and dev set")
+
     # write to files
     def all_fn_exists(fns):
         return all([os.path.exists(fn) for fn in fns]) 
@@ -172,12 +180,11 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
         os_join(lang_dir, "topic.tsv"), os_join(lang_dir, "qrels.txt"), os_join(lang_dir, "folds.json")
     coll_fn, id2passage_fn = \
         os_join(lang_dir, "collection.txt"), os_join(lang_dir, "pid2passage.tsv")
-        
+
     if all_fn_exists([topic_fn, qrel_fn, fold_fn]): 
         print(f"all benchmark files found for {lang}. skip")
     else:
         print(f"Dumping benchmark files of {lang}...")
-        folds = {k: list(v) for k, v in folds.items()}
         write_to_topic_tsv(topics, topic_fn)
         write_qrels(qrels, qrel_fn)
         json.dump(folds, open(fold_fn, "w"))
@@ -208,21 +215,12 @@ def main(args):
     os.makedirs(doc2id_output_dir, exist_ok=True)
 
     lang2doc2id = {}
-    # for lang in LANGS:
-    for lang in ["thai"]:
+    for lang in LANGS:
         print(f"*** processing {lang} ***")
-        # if lang in ["bengali", "finnish", "thai", "swahili", "telugu"]:
-                # continue
-        # if lang in ["english", "russian", "arabic", "indonesian"]:
-        #     continue
-        # try:
         wiki_fn = os_join(wiki_dir, f"{lang_full2short[lang]}wiki.20190201.json")
         title2_id_psgs = load_psg_dict_from_wiki_json(wiki_json=wiki_fn)
         prepare_dataset_from_tydi(
             lang, tydi_dir, wiki_psg_dict=title2_id_psgs, output_dir=output_dir)
-        # except Exception as e:
-        #     print(f"Encounter the following exception when processing {lang}")
-        #     print(e)
 
 
 if __name__ == "__main__":
