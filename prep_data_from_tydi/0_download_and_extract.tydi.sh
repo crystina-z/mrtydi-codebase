@@ -9,8 +9,14 @@ mkdir -p $tydi_dir
 
 for set_name in "train" "dev"
 do
-    gz_fn="tydiqa-v1.0-${set_name}.jsonl.gz"
-    json_fn="tydiqa-v1.0-${set_name}.jsonl.gz"
-    wget "https://storage.googleapis.com/tydiqa/v1.0/${gz_fn}" -P $tydi_dir 
-    gzip -cd $gz_fn > $json_fn 
+    gz_name="tydiqa-v1.0-${set_name}.jsonl.gz"
+    gz_fn="${tydi_dir}/${gz_name}"
+    json_fn="${tydi_dir}/tydiqa-v1.0-${set_name}.jsonl"
+
+    if [ ! -f "$json_fn" ]; then
+        if [ ! -f "$gz_fn" ]; then
+            wget "https://storage.googleapis.com/tydiqa/v1.0/${gz_name}" -P $tydi_dir
+        fi
+        gzip -cd $gz_fn > $json_fn
+    fi
 done
