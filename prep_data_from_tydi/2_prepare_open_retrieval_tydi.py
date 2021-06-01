@@ -182,9 +182,6 @@ def main(args):
     wiki_dir, tydi_dir = args.wiki_dir, args.tydi_dir
     output_dir = args.output_dir
 
-    doc2id_output_dir = os_join(output_dir, "doc2id") 
-    os.makedirs(doc2id_output_dir, exist_ok=True)
-
     lang2doc2id = {}
     for lang in LANGS:
         print(f"*** processing {lang} ***")
