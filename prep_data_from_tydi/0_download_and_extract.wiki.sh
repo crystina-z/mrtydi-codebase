@@ -1,3 +1,12 @@
+wiki_dir=$1
+if [ -z $wiki_dir ]; then
+	echo "Requried to provide directory path to store the Wikipedia dataset"
+	echo "Example: sh 0_download_and_extract.wiki.sh /path/to/wiki_dir"
+	exit
+fi
+
+mkdir -p $wiki_dir
+
 for lang in th sw te 'fi' bn ru ja ar id ko en 
 do
 	if [ $lang = "th" ]; then
@@ -6,8 +15,8 @@ do
 		date="20190201"
 	fi
 
-	bz_fn="${lang}wiki-$date-pages-articles-multistream.xml.bz2" 
-	unbz_fn="${lang}wiki-$date-pages-articles-multistream.xml" 
+	bz_fn="${wiki_dir}/${lang}wiki-$date-pages-articles-multistream.xml.bz2"
+	unbz_fn="${wiki_dir}/${lang}wiki-$date-pages-articles-multistream.xml"
 	wiki_json="${wiki_dir}/${lang}wiki.$date.json"
 
 	if [ ! -f $wiki_json ]; then
@@ -15,9 +24,9 @@ do
 
 		if [ ! -f $unbz_fn ]; then
 			if [ ! -f $bz_fn ]; then
-				wget "https://archive.org/download/${lang}wiki-$date/$bz_fn"
+				wget "https://archive.org/download/${lang}wiki-$date/$bz_fn" -P $wiki_dir
 			fi
-			bzip2 -d $bz_fn 
+			bzip2 -ckd $bz_fn > $unbz_fn
 		fi
 
 		python wikIR/wikiextractor/WikiExtractor.py ${wiki_xml} --links --quiet --json \

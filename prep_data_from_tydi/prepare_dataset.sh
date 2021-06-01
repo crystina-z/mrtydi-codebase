@@ -1,31 +1,33 @@
-wiki_dir="/scratch/czhang/xling/data/tydi/raw"
-# wiki_dir="/home/czhang/src/xling/data/raw" 
+data_output_dir=$1
+if [ -z $data_output_dir ]; then
+	echo "Requried to provide directory path to store the dataset"
+	echo "Example: sh prepare_dataset.sh /path/to/output_dir"
+	exit
+fi
+
+mkdir -p $data_output_dir
+
+wiki_dir="${data_output_dir}/Wiki"
+tydi_dir="${data_output_dir}/TyDi"
+open_retrieval_dir="${data_output_dir}/open-retrieval"
+
+# download and extract the raw dataset
+sh 0_download_and_extract.tydi.sh $tydi_dir
+sh 0_download_and_extract.wiki.sh $wiki_dir
+
+# extract jsonl lines containing valid answers
+sh 1_categorized_tydi_data.sh $tydi_dir
 
 
-# for lang in ar bn en fr id ja ko ru te tl sw th
-# for lang in id ja ko ru te tl sw th
-for lang in th ## fr 
-do
-	wiki_xml="${wiki_dir}/${lang}wiki-20190201-pages-articles-multistream.xml"
-	wiki_json="${wiki_dir}/${lang}wiki.20190201.json"
-	# url="https://archive.org/download/thwiki-20190101/thwiki-20190101-pages-articles-multistream.xml.bz2
-	if [ ! -f $wiki_json ]; then
-		echo "preparing $wiki_json"
-		python wikIR/wikiextractor/WikiExtractor.py ${wiki_xml} --links --quiet --json \
-			--output - \
-			--bytes 10G > "${wiki_json}" 
-	fi
-done
-
-python passage_level_dataset.py \
-	--tydi_dir "/scratch/czhang/xling/data/tydi/tydi_official/has_pos_label" \
+# generate topics.txt, qrels.txt, collections, etc.
+python 2_prepare_open_retrieval_tydi.py \
+	--tydi_dir "${tydi_dir}/with_answer" \
 	--wiki_dir $wiki_dir \
-	--output_dir "/scratch/czhang/xling/data/tydi/open-retrieval"
-	# --output_dir "/scratch/czhang/xling/data/tydi/open-retrieval"
-exit
+	--output_dir $open_retrieval_dir
 
 
-python main.py \
-	--tydi_dir "/scratch/czhang/xling/data/tydi/tydi_official" \
-	--wiki_dir $wiki_dir \
-	--output_dir "/scratch/czhang/xling/data/tydi/open-retrieval"
+# split topics.tsv and qrels.txt into train and dev set
+python 3_split_train_dev_set.py $open_retrieval_dir
+
+
+echo "finished"
