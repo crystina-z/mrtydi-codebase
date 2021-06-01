@@ -1,32 +1,15 @@
 import os
 import json
-import subprocess
 
-from pprint import pprint 
 from argparse import ArgumentParser
 from collections import defaultdict, OrderedDict
 
-from tqdm import tqdm
 from lxml.html import fromstring
-from nirtools.ir import write_qrels
-from capreolus.utils.trec import topic_to_trectxt, document_to_trectxt
+from utils import lang_full2abbr, LANGS
+from utils import write_to_topic_tsv, write_qrels, document_to_trectxt
 
 
 os_join = os.path.join
-lang_full2abbr = OrderedDict({
-    "thai": "th", 
-    "swahili": "sw", 
-    "telugu": "te",
-    "finnish": "fi", 
-    "bengali": "bn", 
-    "russian": "ru", 
-    "japanese": "ja",
-    "arabic": "ar",
-    "indonesian": "id", 
-    "korean": "ko", 
-    "english": "en", 
-})
-LANGS = lang_full2abbr
 
 def get_args():
     parser = ArgumentParser()
@@ -102,12 +85,6 @@ def load_psg_dict_from_wiki_json(wiki_json):
             title2_id_psgs[title] = (docid, passages) 
 
     return title2_id_psgs 
-
-
-def write_to_topic_tsv(topic2id, outp_topic_tsv):
-    with open(outp_topic_tsv, "w") as f:
-        for topic, qid in topic2id.items():
-            f.write(f"{qid}\t{topic}\n")
 
 
 def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
