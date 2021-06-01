@@ -135,7 +135,6 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
 
     # post-process folds
     n_dup = len(folds["train"] & folds["dev"])
-    # folds["train"] = folds["train"] - folds["dev"]
     folds["dev"] = folds["dev"] - folds["train"]
     folds = {k: list(v) for k, v in folds.items()}
     print(f"Removed {n_dup} duplicate qids between train and dev set")
