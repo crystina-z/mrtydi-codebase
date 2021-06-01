@@ -13,8 +13,7 @@ from capreolus.utils.trec import topic_to_trectxt, document_to_trectxt
 
 
 os_join = os.path.join
-# LANGS = ["bn", "ar"]
-lang_full2short = OrderedDict({
+lang_full2abbr = OrderedDict({
     "thai": "th", 
     "swahili": "sw", 
     "telugu": "te",
@@ -27,28 +26,27 @@ lang_full2short = OrderedDict({
     "korean": "ko", 
     "english": "en", 
 })
-lang_short2full = {v: k for k, v in lang_full2short.items()}
-LANGS = lang_full2short
+LANGS = lang_full2abbr
 
 def get_args():
     parser = ArgumentParser()
     parser.add_argument(
         "--tydi_dir", type=str, required=True, 
-        help="The directory that contain the grouped train and dev jsonl of each language's TyDi dataset.")
+        help="The directory containing the language-grouped TyDi train and dev jsonl files.")
     parser.add_argument(
         "--wiki_dir", type=str, required=True, 
-        help="The directory that contain the unziped wikipedia file of all languages")
+        help="The directory containing the WikIR-extracted .json wikipedia files of each languages")
     parser.add_argument(
         "--output_dir", type=str, required=True, 
-        help="The output directory that stores the parsed benchmark and collections")
+        help="The output directory that we will output the parsed benchmark and collection files")
 
     return parser.parse_args()
 
 
 def jsonl_loader(jsonl_path, expected_lang):
     """ 
-    since we only care about passages at this moment, 
-    the "yes_no_anwser" and "minimal_answer" fields are ignored
+    Load the jsonl files with ignoring the "yes_no_anwser" and "minimal_answer" fields,
+    which are related to the "Minimal Answer Span Task" only. 
     """ 
     with open(jsonl_path) as f:
         for line in f:
@@ -59,8 +57,6 @@ def jsonl_loader(jsonl_path, expected_lang):
             doc, doc_title = line["document_plaintext"], line["document_title"]
             annotations, passage_answer_candidates = line["annotations"], line["passage_answer_candidates"]
 
-            # nonrel_indexes = [
-            #     a["passage_answer"]["candidate_index"] for a in annotations if a["passage_answer"]["candidate_index"] == -1]
             passages = [
                 " ".join(
                     doc[span["plaintext_start_byte"]:span["plaintext_end_byte"] + 1].replace("\n", " ").split()
@@ -72,15 +68,17 @@ def jsonl_loader(jsonl_path, expected_lang):
             rel_indexes = list({
                 index for index in rel_indexes if passages[index] != ""})
 
-            # Warning: passage cannot be filter out here! since we will ned to use re_indexes to identify the passage later
-            # passages = [p for p in passages if p != ""]
+            # Warning: passage cannot be filter out here (as below)! 
+            # since we will need to use rel_indexes to identify the relevant passage later.
+            # >> passages = [p for p in passages if p != ""]
             yield question, doc_title, passages, rel_indexes
 
 
 def segment_wiki_doc(doc):
+    # currently we identify the passages via \n\n
     # todo: this code is a rough simulation of how TyDi does it, 
     # pending to change - https://github.com/google-research-datasets/tydiqa/issues/11 
-    doc = doc.replace("\n\n\n", "") # this \n\n\n probably indicate a removed table etc?
+    doc = doc.replace("\n\n\n", "") # this \n\n\n seems to indicate a removed table etc.
     passages = [p for p in doc.split("\n\n") if p != ""]
     return passages
 
@@ -92,16 +90,14 @@ def load_psg_dict_from_wiki_json(wiki_json):
             line = json.loads(line) 
             docid, url, title, doc = line["id"], line["url"], line["title"], line["text"]
 
-            # assert title not in title2_id_psgs, f"Got duplicate Wikipedia article, {title}" 
+            assert title not in title2_id_psgs, f"Got duplicate Wikipedia article, {title}" 
             try:
                 doc = fromstring(doc).text_content()
-            except Exception as e:
+            except Exception as e:  # use unprocessed Wiki articles if extracting fails 
                 print(docid, len(doc))
 
-            doc.lstrip(title)
-
-            # (1) use the in parsed wiki as doc id; 
-            # identify the passage via \n
+            doc.lstrip(title).strip()   # some Wiki articles somehow start with title 
+            assert doc[:len(title)] != title, f"Wikipeida {docid} start with its title {title}"
             passages = segment_wiki_doc(doc)
             title2_id_psgs[title] = (docid, passages) 
 
@@ -155,7 +151,6 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
                 passage_id = f"{docid}-{rel_id}"
                 qrels[qid][passage_id] = 1 
 
-            # parse passages
             # overwrite our own wiki psg with the official ones 
             wiki_psg_dict[doc_title] = (docid, passages) 
 
@@ -217,7 +212,7 @@ def main(args):
     lang2doc2id = {}
     for lang in LANGS:
         print(f"*** processing {lang} ***")
-        wiki_fn = os_join(wiki_dir, f"{lang_full2short[lang]}wiki.20190201.json")
+        wiki_fn = os_join(wiki_dir, f"{lang_full2abbr[lang]}wiki.20190201.json")
         title2_id_psgs = load_psg_dict_from_wiki_json(wiki_json=wiki_fn)
         prepare_dataset_from_tydi(
             lang, tydi_dir, wiki_psg_dict=title2_id_psgs, output_dir=output_dir)
