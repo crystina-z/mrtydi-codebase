@@ -1,0 +1,3 @@
+[submodule "prep_data_from_tydi/wikIR"]
+	path = prep_data_from_tydi/wikIR
+	url = https://github.com/getalp/wikIR.git
