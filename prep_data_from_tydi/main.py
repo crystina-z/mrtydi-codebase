@@ -210,5 +210,5 @@ def print_stats_main(args):
 
 if __name__ == "__main__":
     args = get_args()
-    main(args)
-    # print_stats_main(args)
+    # main(args)
+    print_stats_main(args)
