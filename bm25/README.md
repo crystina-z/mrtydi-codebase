@@ -1,3 +1,5 @@
+This files contains the BM25 scores (`k1=0.9 b=0.4`) of each language.
+
 with `trec_eval`
 
 **train set**
