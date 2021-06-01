@@ -20,7 +20,8 @@ cd tools/eval/ndeval && make && cd ../../..
 cd ..
 
 export ANSERINI_DIR="$pwd/anserini"
-trec_eval="$ANSERINI_DIR/tools/eval/trec_eval.9.0.4"
+trec_eval_path="$ANSERINI_DIR/tools/eval/trec_eval.9.0.4"
+export PATH=${trec_eval_path}:$PATH
 ```
 
 2. Then we are ready to run Index, Searching and Evaluation
