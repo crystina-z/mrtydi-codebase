@@ -1,10 +1,10 @@
 open_retrieval_dir=$1
 lang=$2
-anserini_dir="/path/to/anserini"
+# anserini_dir="/path/to/anserini"
 root_dir="${open_retrieval_dir}/${lang}"
 
-alias index="${anserini_dir}/target/appassembler/bin/IndexCollection"
-alias search="${anserini_dir}/target/appassembler/bin/SearchCollection"
+alias index="${ANSERINI_DIR}/target/appassembler/bin/IndexCollection"
+alias search="${ANSERINI_DIR}/target/appassembler/bin/SearchCollection"
 
 if [ ! -d $root_dir ]; then
 	echo "unfound directory $root_dir"
@@ -94,7 +94,7 @@ do
     fi
 
     # evaluate
-    qrels_fn="${root_dir}/qrels.${set_name}.txt"
-    trec_eval $qrels_fn $runfile
+    # qrels_fn="${root_dir}/qrels.${set_name}.txt"
+    # trec_eval $qrels_fn $runfile
 done
 
