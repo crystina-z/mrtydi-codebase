@@ -1,7 +1,8 @@
-lang=$1
-trec_cmd=$2 # e.g. -J, -c, etc 
+open_retrieval_dir=$1
+lang=$2
+trec_cmd=$3  # e.g. -J, -c, etc
 
-root_dir="/home/x978zhan/task-xling/dataset/open-retrieval/${lang}"
+root_dir="${open_retrieval_dir}/${lang}"
 runfile_dir="${root_dir}/runfiles"
 
 # search (train and dev) 
@@ -31,4 +32,3 @@ do
     trec_eval $trec_cmd $qrels_fn $runfile -m map -m P.1,5,10,20 -m ndcg_cut.10,20
     echo 
 done
-

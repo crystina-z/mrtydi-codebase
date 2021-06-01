@@ -1,6 +1,7 @@
-lang=$1
+open_retrieval_dir=$1
+lang=$2
 anserini_dir="/path/to/anserini"
-root_dir="/path/to/open-retrieval/${lang}"
+root_dir="${open_retrieval_dir}/${lang}"
 
 alias index="${anserini_dir}/target/appassembler/bin/IndexCollection"
 alias search="${anserini_dir}/target/appassembler/bin/SearchCollection"
