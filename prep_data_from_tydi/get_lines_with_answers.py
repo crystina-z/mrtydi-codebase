@@ -28,7 +28,7 @@ def have_answer(line):
 
 
 
-def get_anserable_questions(tydi_dir):
+def get_lines_contain_answers(tydi_dir):
     tydi_with_answer_dir=f"{tydi_dir}/with_answer" 
     tydi_without_answer_dir=f"{tydi_dir}/without_answer"
 
@@ -56,4 +56,4 @@ def get_anserable_questions(tydi_dir):
 
 if __name__ == "__main__":
     tydi_dir = sys.argv[1]
-    get_anserable_questions(tydi_dir=tydi_dir)
+    get_lines_contain_answers(tydi_dir=tydi_dir)
