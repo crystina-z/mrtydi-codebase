@@ -1,3 +1,6 @@
+The processed dataset could be downloaded [here](https://uofwaterloo-my.sharepoint.com/:f:/g/personal/x978zhan_uwaterloo_ca/Egpbu0I7gIRMlLyIOlI3dyQB02_S5s5iLDIMW3n0jTX_Qg?e=lvp3Ns).
+Each `.zip` contains directories: `arabic   english  indonesian  korean   swahili  thai bengali  finnish  japanese    russian  telugu`.
+
 ## Prepare open-retrieval data from the TyDi primary task data and Wikipedia dump
 Heads-up: the data downloading and processing could take over 20 hours, where the English Wikipedia is the most time-consuming one.
 ```
