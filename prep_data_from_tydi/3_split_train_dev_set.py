@@ -30,7 +30,8 @@ def split_train_dev_set(root_dir):
         assert os.path.exists(fold_fn), f"Folds file unfound for langugage {lang}."
 
         folds = json.load(open(fold_fn))
-        assert set(folds["train"]) & set(folds["dev"]) == 0, f"Overlap queries detected for language {lang}."
+        n_dup = len(set(folds["train"]) & set(folds["dev"]))
+        assert n_dup == 0, f"{n_dup} overlap queries detected for language {lang}."
 
         for set_name in folds:
             set_content = set(folds[set_name])

@@ -79,8 +79,7 @@ def load_psg_dict_from_wiki_json(wiki_json):
             except Exception as e:  # use unprocessed Wiki articles if extracting fails 
                 print(docid, len(doc))
 
-            doc.lstrip(title).strip()   # some Wiki articles somehow start with title 
-            assert doc[:len(title)] != title, f"Wikipeida {docid} start with its title {title}"
+            # doc = doc.lstrip(title).strip()   # Wiki articles start with title
             passages = segment_wiki_doc(doc)
             title2_id_psgs[title] = (docid, passages) 
 
@@ -189,7 +188,8 @@ def main(args):
     lang2doc2id = {}
     for lang in LANGS:
         print(f"*** processing {lang} ***")
-        wiki_fn = os_join(wiki_dir, f"{lang_full2abbr[lang]}wiki.20190201.json")
+        wiki_name = f"{lang_full2abbr[lang]}wiki.20190201.json" if lang != "thai" else f"{lang_full2abbr[lang]}wiki.20190101.json"
+        wiki_fn = os_join(wiki_dir, wiki_name)
         title2_id_psgs = load_psg_dict_from_wiki_json(wiki_json=wiki_fn)
         prepare_dataset_from_tydi(
             lang, tydi_dir, wiki_psg_dict=title2_id_psgs, output_dir=output_dir)
