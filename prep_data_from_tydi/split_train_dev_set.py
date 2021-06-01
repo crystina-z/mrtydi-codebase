@@ -16,7 +16,7 @@ def keep_only(fn, qids_to_keep):
     """ Read from file `fn`, and return only the lines which starts with the qids in qids_to_keep """
     with open(fn) as f:
         for line in f:
-            qid = int(line.strip().split()[0])
+            qid = line.strip().split()[0]
             if qid in qids_to_keep:
                 yield line
 

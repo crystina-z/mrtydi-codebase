@@ -112,7 +112,7 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
         for question, doc_title, passages, rel_indexes in jsonl_loader(jsonl_path, expected_lang=lang):
             # add to topic
             if question not in topics:
-                topics[question] = len(topics) 
+                topics[question] = str(len(topics))
 
             qid = topics[question]
 
