@@ -79,8 +79,13 @@ def load_psg_dict_from_wiki_json(wiki_json):
             except Exception as e:  # use unprocessed Wiki articles if extracting fails 
                 print(docid, len(doc))
 
-            # doc = doc.lstrip(title).strip()   # Wiki articles start with title
+            doc = doc.lstrip(title).strip()   # Wiki articles start with title
             passages = segment_wiki_doc(doc)
+            if len(passages) == 0:
+                continue
+
+            if title == passages[0]:
+                print(f"Warning, {docid} with {url} still have article title as the first paragraph")
             title2_id_psgs[title] = (docid, passages) 
 
     return title2_id_psgs 
