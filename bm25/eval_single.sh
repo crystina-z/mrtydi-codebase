@@ -29,6 +29,6 @@ do
     trec_eval $trec_cmd $qrels_fn $runfile | head -n 5
     echo 
 
-    trec_eval $trec_cmd $qrels_fn $runfile -m map -m P.1,5,10,20 -m ndcg_cut.10,20
+    trec_eval $trec_cmd $qrels_fn $runfile -m map -m P.1,5,10,20 -m ndcg_cut.10,20 -m recip_rank
     echo 
 done
