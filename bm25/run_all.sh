@@ -6,8 +6,8 @@ for lang in thai finnish bengali russian japanese arabic indonesian korean engli
 do
 	echo $lang
 	if [ "$mode" = "eval" ]; then
-		sh eval_single.sh $open_retrieval_dir $lang $cmd
+		sh bm25/eval_single.sh $open_retrieval_dir $lang $cmd
 	else
-		sh run_bm25_single.sh $open_retrieval_dir $lang
+		sh bm25/run_bm25_single.sh $open_retrieval_dir $lang
 	fi
 done
