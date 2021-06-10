@@ -15,6 +15,7 @@ for set_name in "train" "dev"
 do
     echo "==============\n" $set_name "\n=============="
     qrels_fn="${root_dir}/qrels.${set_name}.txt"
+    # qrels_fn="/home/x978zhan/task-xling/dataset-perv/benchmarks/${lang}/qrels.${set_name}.txt"
     runfile="${runfile_dir}/bm25.${set_name}.k1=$k1.b=$b.txt"
     if [ ! -f $runfile ]; then 
 	echo "unfound $runfile"

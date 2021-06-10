@@ -2,7 +2,8 @@ open_retrieval_dir=$1
 mode=$2
 cmd=$3
 
-for lang in thai finnish bengali russian japanese arabic indonesian korean english 
+# for lang in thai finnish bengali russian japanese arabic indonesian korean english 
+for lang in thai bengali # russian japanese arabic indonesian korean english 
 do
 	echo $lang
 	if [ "$mode" = "eval" ]; then
