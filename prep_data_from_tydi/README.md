@@ -22,14 +22,29 @@ The statistics of the files:
 | Language     |   train   |          |    dev    |          |
 |--------------|:---------:|:--------:|:---------:|:--------:|
 |              | # queries | # labels | # queries | # labels |
-| thai         |      4131 |     4182 |      1190 |     1314 |
+| thai         |      4126 |     4177 |      1190 |     1314 |
 | swahili      |      2598 |     3025 |       670 |      743 |
-| telugu       |      4867 |     4867 |       646 |      664 |
-| finnish      |      8300 |     8299 |      1254 |     1451 |
+| telugu       |      4863 |     4863 |       646 |      664 |
+| finnish      |      8299 |     8298 |      1254 |     1451 |
 | bengali      |      2153 |     2162 |       111 |      127 |
-| russian      |      6746 |     6746 |       996 |     1130 |
-| japanese     |      4627 |     4625 |       720 |      863 |
-| arabic       |     15507 |    15507 |      1082 |     1208 |
-| indonesian   |      6135 |     6135 |       829 |      961 |
+| russian      |      6741 |     6741 |       995 |     1129 |
+| japanese     |      4625 |     4623 |       720 |      863 |
+| arabic       |     15492 |    15492 |      1081 |     1207 |
+| indonesian   |      6126 |     6126 |       829 |      961 |
 | korean       |      1598 |     1624 |       421 |      461 |
 | english      |      4426 |     4426 |       744 |      935 |
+
+# number of documents
+| Language     |   No. Doc        |
+|--------------|:----------------:|
+| thai         |      512,664     |
+| swahili      |      136,634     |
+| telugu       |      491,084     |
+| finnish      |      1,900,943   |
+| bengali      |      285,249     |
+| russian      |      9,452,259   |
+| japanese     |      6,883,618   |
+| arabic       |      2,005,506   |
+| indonesian   |      1,469,414   |
+| korean       |      1,469,882   |
+| english      |      32,926,188  |
