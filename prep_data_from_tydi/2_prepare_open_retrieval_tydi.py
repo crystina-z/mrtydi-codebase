@@ -47,10 +47,6 @@ def jsonl_loader(jsonl_path, expected_lang):
                 for span in passage_answer_candidates
             ]
             empty_psg = [p for p in passages if p.strip() == ""]
-            if len(empty_psg) > 0:
-                if len([p for p in passages[:passages.index("")] if p == ""]) > 0:
-                    import pdb
-                    pdb.set_trace()
 
             rel_indexes = [
                 a["passage_answer"]["candidate_index"] for a in annotations if a["passage_answer"]["candidate_index"] != -1]
@@ -61,12 +57,7 @@ def jsonl_loader(jsonl_path, expected_lang):
                 passages = passages[:passages.index("")]
             except ValueError: 
                 pass 
-            assert(len([p for p in passages if p.strip() == ""])) == 0
             assert(all([p.strip() != "" for p in passages]))
-
-            if (len([p for p in passages if p.strip() == ""])) > 0:
-                import pdb
-                pdb.set_trace()
             assert(len([p for p in passages if p.strip() == ""])) == 0
 
 
@@ -103,14 +94,6 @@ def load_psg_dict_from_wiki_json(wiki_json):
             passages = segment_wiki_doc(doc)
             if len(passages) == 0:
                 continue
-
-            if len([p for p in passages if p.strip() != ""]) == 0:
-                import pdb
-                pdb.set_trace()
-
-            if docid == "456": 
-                import pdb
-                pdb.set_trace()
 
             if title == passages[0]:
                 print(f"Warning, {docid} with {url} still have article title as the first paragraph")
@@ -196,27 +179,14 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
         print(f"all collection files found for {lang}. skip")
     else:
         print(f"Dumping collection files of {lang}...")
-        a = ["" in psg[1] for k, psg in wiki_psg_dict.items()]
-        import pdb
-        # pdb.set_trace()
-
         wiki_psg_sorted = sorted(wiki_psg_dict.items(), key=lambda kv: int(kv[1][0]))  # sort according to docid
-        a = ["" in psg[1] for k, psg in wiki_psg_sorted]
-        locate_456 = ["" in psg[1] for k, psg in wiki_psg_sorted if psg[0] == "456"]
-        # pdb.set_trace()
 
         with open(id2passage_fn, "w") as id2psg_f, open(coll_fn, "w") as coll_f: 
             for title, (docid, passages) in wiki_psg_sorted:
                 id2psg_f.write(f"{docid}\t{title}\n")
                 for i, passage in enumerate(passages):
                     passage_id = f"{docid}-{i}"
-                    if passage.strip() == "":
-                        import pdb
-                        pdb.set_trace()
-
-                    # assert passage.strip() != "", f"Got empty passage for document {docid}, passage {i}, which have {len(passages)} doc in total"
-                    if passage.strip() == "":
-                        print(f"Got empty passage for document {docid}, passage {i}, which have {len(passages)} doc in total")
+                    assert passage.strip() != "", f"Got empty passage for document {docid}, passage {i}, which have {len(passages)} doc in total"
                     coll_f.write(document_to_trectxt(passage_id, passage))
 
 
