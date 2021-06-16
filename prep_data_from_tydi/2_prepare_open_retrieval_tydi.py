@@ -1,5 +1,6 @@
 import os
 import json
+import random
 
 from argparse import ArgumentParser
 from collections import defaultdict, OrderedDict
@@ -10,6 +11,9 @@ from utils import write_to_topic_tsv, write_qrels, document_to_trectxt
 
 
 os_join = os.path.join
+random.seed(123)
+TRAIN_RATIO = 0.8  # from the train set, we keep $TRAIN_RATIO qids in train set, and the rest in dev set
+
 
 def get_args():
     parser = ArgumentParser()
@@ -153,6 +157,11 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
     n_dup = len(folds["train"] & folds["dev"])
     folds["dev"] = folds["dev"] - folds["train"]
     folds = {k: list(v) for k, v in folds.items()}
+
+    train_set = [qid for qid in folds["train"] if random.random() < TRAIN_RATIO]
+    dev_set = [qid for qid in folds["train"] if qid not in train_set]
+    test_set = folds["dev"]
+    folds = {"train": train_set, "dev": dev_set, "test": test_set}
     print(f"Removed {n_dup} duplicate qids between train and dev set")
 
     # write to files
@@ -195,6 +204,7 @@ def main(args):
     Group the train and dev entries by language. 
     For each language, prepare: 
         (1) topic.tsv; (2) qrels.txt; (3) folds.json (4) docid_2_url_and_title.json
+    Note that in the folds.json; the train and dev set are prepared from the TyDi train set, and the test set is from the TyDi dev test. 
     """
     wiki_dir, tydi_dir = args.wiki_dir, args.tydi_dir
     output_dir = args.output_dir

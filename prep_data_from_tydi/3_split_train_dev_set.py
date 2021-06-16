@@ -30,8 +30,8 @@ def split_train_dev_set(root_dir):
         assert os.path.exists(fold_fn), f"Folds file unfound for langugage {lang}."
 
         folds = json.load(open(fold_fn))
-        n_dup = len(set(folds["train"]) & set(folds["dev"]))
-        assert n_dup == 0, f"{n_dup} overlap queries detected for language {lang}."
+        for n_dup in [len(set(folds["train"]) & set(folds["dev"])), len(set(folds["train"]) & set(folds["test"])), len(set(folds["dev"]) & set(folds["test"]))]:
+            assert n_dup == 0, f"{n_dup} overlap queries detected for language {lang}."
 
         for set_name in folds:
             set_content = set(folds[set_name])
@@ -40,7 +40,6 @@ def split_train_dev_set(root_dir):
                 os_join(lang_dir, "topic.tsv"), os_join(lang_dir, f"topic.{set_name}.tsv")  
             qrel_fn, qrel_out_fn = \
                 os_join(lang_dir, "qrels.txt"), os_join(lang_dir, f"qrels.{set_name}.txt")  
-
 
             assert os.path.exists(topic_fn), f"Topic file unfound for langugage {lang}."
             assert os.path.exists(qrel_fn), f"Qrel file unfound for langugage {lang}."
