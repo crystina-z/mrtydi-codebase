@@ -1,6 +1,8 @@
 import subprocess
 from collections import defaultdict
 
+import numpy as np
+
 
 def str_list(lst):
     return list(map(str, lst)) 
