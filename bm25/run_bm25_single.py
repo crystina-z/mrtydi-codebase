@@ -48,15 +48,15 @@ def search_fn(
         rm3_params.append("-rm3") 
         if fb_terms is not None:
             assert isinstance(fb_terms, list) or isinstance(fb_terms, tuple)
-            rm3_params.extends(["-rm3.fbTerms", *str_list(fb_terms)])
+            rm3_params.extend(["-rm3.fbTerms", *str_list(fb_terms)])
 
         if fb_docs is not None:
             assert isinstance(fb_docs, list) or isinstance(fb_docs, tuple)
-            rm3_params.extends(["-rm3.fbDocs", *str_list(fb_docs)])
+            rm3_params.extend(["-rm3.fbDocs", *str_list(fb_docs)])
 
         if ori_weights is not None:
             assert isinstance(ori_weights, list) or isinstance(ori_weights, tuple)
-            rm3_params.extends(["-rm3.originalQueryWeight", *str_list(ori_weights)])
+            rm3_params.extend(["-rm3.originalQueryWeight", *str_list(ori_weights)])
 
     cmd = [search, 
         "-index", index_path, 
@@ -74,7 +74,7 @@ def tune_parameters(k1_s, b_s, hits, is_rm3=False, fb_terms=None, fb_docs=None, 
     set_name = "dev" 
     topic_fn = f"{root_dir}/topic.{set_name}.tsv"
     runfile = f"{runfile_dir}/bm25{'rm3' if is_rm3 else ''}.{set_name}"
-    donefile = f"{runfile_dir}/done"
+    donefile = f"{runfile_dir}/done.bm25{'rm3' if is_rm3 else ''}"
 
     # fb_terms = [None] if fb_terms is None else fb_terms
     # fb_docs = [None] if fb_docs is None else fb_docs 
@@ -107,28 +107,33 @@ def tune_parameters(k1_s, b_s, hits, is_rm3=False, fb_terms=None, fb_docs=None, 
 
     # evaluate and find the best parameters
     best = [-1, {}, {}]  # (score (optimize), {all metric: score}, {para: value}) 
-    qrels_fn = f"{root_dir}/qrels.{set_name}.txt"
-    qrels = load_qrels(qrels_fn)
-    for params in gen_paras:
-        # k1, b if is_rm3 else k1, b, fb_term, fb_doc, ori_weight)
-        expected_n_params = 5 if is_rm3 else 2
-        assert len(params) == expected_n_params
+    best_json_fn = f"{runfile_dir}/best.bm25{'rm3' if is_rm3 else ''}.json"
+    if os.path.exists(best_json_fn):
+        best = json.load(open(best_json_fn))
+        # return best[1], best[2]
+    else:
+        qrels_fn = f"{root_dir}/qrels.{set_name}.txt"
+        qrels = load_qrels(qrels_fn)
+        for params in gen_paras():
+            # k1, b if is_rm3 else k1, b, fb_term, fb_doc, ori_weight)
+            expected_n_params = 5 if is_rm3 else 2
+            assert len(params) == expected_n_params
 
-        evaluator = pytrec_eval.RelevanceEvaluator(qrels, {"recip_rank", "ndcg_cut"})
-        cur_runfile = f"{runfile}_bm25(k1=%.1f,b=%.1f)_default" if not is_rm3 else \
-            f"{runfile}_bm25(k1=%.1f,b=%.1f)_rm3(fbTerms=%d,fbDocs=%d,originalQueryWeight=%.1f)"
-        cur_runfile =  cur_runfile % params 
+            evaluator = pytrec_eval.RelevanceEvaluator(qrels, {"recip_rank", "ndcg_cut"})
+            cur_runfile = f"{runfile}_bm25(k1=%.1f,b=%.1f)_default" if not is_rm3 else \
+                f"{runfile}_bm25(k1=%.1f,b=%.1f)_rm3(fbTerms=%d,fbDocs=%d,originalQueryWeight=%.1f)"
+            cur_runfile = cur_runfile % params 
 
-        runs = load_runs(cur_runfile)
-        qid2score = evaluator.evaluate(runs)
-        metric2score = aggregate_score(qid2score)
-        if metric2score[optimize] > best[0]:
-            best = (
-                metric2score[optimize], 
-                metric2score, 
-                # {"k1": k1, "b": b},
-                dict(zip(["k1", "b", "fb_term", "fb_doc", "ori_weight"], params)),
-            )
+            runs = load_runs(cur_runfile)
+            qid2score = evaluator.evaluate(runs)
+            metric2score = aggregate_score(qid2score)
+            if metric2score[optimize] > best[0]:
+                best = (
+                    metric2score[optimize], 
+                    metric2score, 
+                    # {"k1": k1, "b": b},
+                    dict(zip(["k1", "b", "fb_term", "fb_doc", "ori_weight"], params)),
+                )
 
     print("best score:")
     pprint(best[1])
@@ -142,8 +147,8 @@ def tune_parameters(k1_s, b_s, hits, is_rm3=False, fb_terms=None, fb_docs=None, 
         topic_fn = f"{root_dir}/topic.{set_name}.tsv"
         # runfile = f"{runfile_dir}/bm25.{set_name}.k1={k1}.b1={b}" if not is_rm3 else \
         #     f"{runfile_dir}/bm25rm3.{set_name}.k1={k1}.b1={b}.fb_term={fb_term}.fb_doc={fb_doc}.ori_weight={ori_weight}"
-        cur_runfile = runfile + suffix 
-        if not os.path.exists(cur_runfile):
+        runfile = f"{runfile_dir}/bm25{'rm3' if is_rm3 else ''}.{set_name}.{suffix}"
+        if not os.path.exists(runfile):
             if is_rm3:
                 search_fn(
                     index_path, topic_fn, topicreader, runfile, lang_abbr, 
@@ -156,7 +161,8 @@ def tune_parameters(k1_s, b_s, hits, is_rm3=False, fb_terms=None, fb_docs=None, 
                     [params["k1"]], [params["b"]], hits,
                 )
 
-    json.dump(best, open(f"{runfile_dir}/best.bm25{'rm3' if is_rm3 else ''}.json", "w"))
+    # json.dump(best, open(f"{runfile_dir}/best.bm25{'rm3' if is_rm3 else ''}.json", "w"))
+    json.dump(best, open(best_json_fn, "w"))
     return best[1], params 
 
 
@@ -174,8 +180,11 @@ if not os.path.exists(index_path):
 
 
 # tune parameters for bm25 and rm3
+print("running bm25")
 score, params = tune_parameters(    # bm25
     k1_s=k1_s, b_s=b_s, hits=hits, is_rm3=False)
+
+print("running bm25rm3")
 score, params = tune_parameters(    # rm3 (does not tune k1 and b to save time and space)
     k1_s=[params["k1"]], b_s=[params["b"]], hits=hits, is_rm3=True, 
     fb_terms=fb_terms, fb_docs=fb_docs, ori_weights=ori_weights)
