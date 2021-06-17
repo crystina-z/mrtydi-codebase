@@ -6,23 +6,20 @@ root_dir="${open_retrieval_dir}/${lang}"
 runfile_dir="${root_dir}/runfiles"
 
 # search (train and dev) 
-k1=0.9
-b=0.4
 hits=1000
 topicreader="TsvString"
 
-for set_name in "train" "dev"
+for set_name in "train" "test"
 do
     echo "==============\n" $set_name "\n=============="
     qrels_fn="${root_dir}/qrels.${set_name}.txt"
-    # qrels_fn="/home/x978zhan/task-xling/dataset-perv/benchmarks/${lang}/qrels.${set_name}.txt"
-    runfile="${runfile_dir}/bm25.${set_name}.k1=$k1.b=$b.txt"
-    if [ ! -f $runfile ]; then 
+    runfile="${runfile_dir}/bm25*.${set_name}.*"
+    if [ ! -f $(ls $runfile) ]; then
 	echo "unfound $runfile"
 	exit
     fi
 
-    if [ ! -f $qrels_fn ]; then 
+    if [ ! -f $qrels_fn ]; then
 	echo "unfound $qrels_fn"
 	exit
     fi
