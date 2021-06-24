@@ -41,7 +41,13 @@ case $lang in
     "korean")
         lang_abbr="ko"
     ;;
-    *)
+    "telugu")
+        lang_abbr="te"
+    ;;
+    "swahili")
+        lang_abbr="sw"
+    ;;
+   *)
         echo "Unknown language: $lang"
         exit
     ;;
@@ -68,11 +74,13 @@ fi
 # index 
 collection_type=TrecCollection
 if [ ! -d $index_path ]; then
-    index -collection $collection_type \
-    -input $collection_dir \
-    -index $index_path \
-    -generator DefaultLuceneDocumentGenerator \
-    -threads 16 -storePositions -storeDocvectors -storeRaw -language $lang_abbr
+    cmd="-collection $collection_type -input $collection_dir -index $index_path -generator DefaultLuceneDocumentGenerator -threads 16 -storePositions -storeDocvectors -storeRaw"
+
+    if [ "$lang_abbr" = "te" ] || [ "$lang_abbr" = "sw" ]; then
+        index $cmd -pretokenized
+    else
+        index $cmd -language $lang_abbr
+    fi
 fi
 
 
@@ -84,20 +92,27 @@ for set_name in "train" "test"
 do
     # bm25
     topic_fn="${root_dir}/topic.${set_name}.tsv"
-
     runfile="${runfile_dir}/bm25.${set_name}.default.txt"
     if [ ! -f $runfile ]; then
-        search -index $index_path \
-            -topics $topic_fn -topicreader $topicreader -output $runfile \
-            -bm25 -threads 16 -language $lang_abbr -hits $hits
+        cmd="-index $index_path -topics $topic_fn -topicreader $topicreader -output $runfile -bm25 -threads 16 -hits $hits"
+
+        if [ "$lang_abbr" = "te" ] || [ "$lang_abbr" = "sw" ]; then
+            search $cmd -pretokenized
+        else
+            search $cmd -language $lang_abbr
+        fi
     fi
 
     # bm25 + rm3 
     runfile="${runfile_dir}/bm25rm3.${set_name}.default.txt"
     if [ ! -f $runfile ]; then
-        search -index $index_path \
-            -topics $topic_fn -topicreader $topicreader -output $runfile \
-            -bm25 -rm3 -threads 16 -language $lang_abbr -hits $hits
+        cmd="-index $index_path -topics $topic_fn -topicreader $topicreader -output $runfile -bm25 -rm3 -threads 16 -hits $hits"
+
+        if [ "$lang_abbr" = "te" ] || [ "$lang_abbr" = "sw" ]; then
+            search $cmd -pretokenized
+        else
+            search $cmd -language $lang_abbr
+        fi
     fi
 
     # evaluate

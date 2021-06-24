@@ -16,6 +16,8 @@ lang2abbr = {
     "bengali": "bn",
     "indonesian": "in",
     "korean": "ko",
+    "swahili": "sw",
+    "telugu": "te",
 }
 optimize = "recip_rank"
 

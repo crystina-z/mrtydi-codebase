@@ -58,15 +58,17 @@ def search_fn(
             assert isinstance(ori_weights, list) or isinstance(ori_weights, tuple)
             rm3_params.extend(["-rm3.originalQueryWeight", *str_list(ori_weights)])
 
+    lang_params = ["-language", lang_abbr] if lang_abbr not in ["sw", "te"] else ["-pretokenized"]
     cmd = [search, 
         "-index", index_path, 
         "-topics", topic_fn, "-topicreader", topicreader,
         "-output", runfile, 
-        "-language", lang_abbr, 
         "-hits", str(hits),
         "-bm25", "-bm25.k1", *str_list(k1_s), "-bm25.b", *str_list(b_s), 
         "-threads", "16", 
-    ] + rm3_params
+        *lang_params,
+        *rm3_params,
+    ]
     run_command(cmd)
 
 
@@ -168,13 +170,14 @@ def tune_parameters(k1_s, b_s, hits, is_rm3=False, fb_terms=None, fb_docs=None, 
 
 # index 
 if not os.path.exists(index_path):
+    lang_params = ["-language", lang_abbr] if lang_abbr not in ["sw", "te"] else ["-pretokenized"]
     cmd = [index, 
         "-collection", collection_type,
         "-input", collection_dir,
         "-index", index_path,
-        "-language", lang_abbr,
         "-generator", "DefaultLuceneDocumentGenerator",
         "-threads", "16", "-storePositions", "-storeDocvectors", "-storeRaw", 
+        *lang_params,
     ]
     run_command(cmd)
 
