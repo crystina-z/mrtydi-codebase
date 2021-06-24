@@ -13,20 +13,23 @@ for set_name in "train" "test"
 do
     echo "==============\n" $set_name "\n=============="
     qrels_fn="${root_dir}/qrels.${set_name}.txt"
-    runfile="${runfile_dir}/bm25*.${set_name}.*"
-    if [ ! -f $(ls $runfile) ]; then
-	echo "unfound $runfile"
-	exit
-    fi
+    for runfile in ${runfile_dir}/bm25*.${set_name}.*
+    do
+	    echo $runfile
+	    if [ ! -f $(ls $runfile) ]; then
+		echo "unfound $runfile"
+		exit
+	    fi
 
-    if [ ! -f $qrels_fn ]; then
-	echo "unfound $qrels_fn"
-	exit
-    fi
+	    if [ ! -f $qrels_fn ]; then
+		echo "unfound $qrels_fn"
+		exit
+	    fi
 
-    trec_eval $trec_cmd $qrels_fn $runfile | head -n 5
-    echo 
+	    trec_eval $trec_cmd $qrels_fn $runfile | head -n 5
+	    echo
 
-    trec_eval $trec_cmd $qrels_fn $runfile -m map -m P.1,5,10,20 -m ndcg_cut.10,20 -m recip_rank
-    echo 
+	    trec_eval $trec_cmd $qrels_fn $runfile -m map -m P.1,5,10,20 -m ndcg_cut.10,20 -m recip_rank
+	    echo
+   done
 done
