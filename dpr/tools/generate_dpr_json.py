@@ -4,9 +4,11 @@ import sys
 import json
 import glob
 
+from tqdm import tqdm
+
 os_join = os.path.join
 os_dir = os.path.dirname
-PACKAGE_PATH = os_dir(os_dir(os_dir(os_dir(__file__))))
+PACKAGE_PATH = os_dir(os_dir(os_dir(os.path.abspath(__file__))))
 sys.path.append(PACKAGE_PATH)
 
 from utils import load_runs, load_qrels, load_topic_tsv, load_collection_trec
@@ -14,6 +16,9 @@ from utils import load_runs, load_qrels, load_topic_tsv, load_collection_trec
 
 def get_train_runfile(dir):
 	fns = [fn for fn in glob.glob(f"{dir}/bm25.*train*") if "default" not in fn]
+	if len(fns) == 0:
+		import pdb
+		pdb.set_trace()
 	assert len(fns) == 1, f"Expect only one runfile, but got {len(fns)}: {fns}"
 	return fns[0]
 
@@ -52,9 +57,10 @@ def main():
 	coll_fn = os_join(lang_dir, "collection", "collection.txt")
 	runfile_dir = os_join(lang_dir, "runfiles")
 	train_runfile = get_train_runfile(runfile_dir)
-	assert all(map(os.exists, [topic_fn, folds_fn, qrels_fn, coll_fn]))
+	assert all(map(os.path.exists, [topic_fn, folds_fn, qrels_fn, coll_fn]))
 	dpr_dir = os_join(lang_dir, "dpr_inputs")
 	output_json = os_join(dpr_dir, "train.json")
+	os.makedirs(dpr_dir, exist_ok=True)
 
 	folds = json.load(open(folds_fn))
 	qrels = load_qrels(qrels_fn)
@@ -66,7 +72,7 @@ def main():
 	# todo: add support to dev and test set
 	n_unfound = 0
 	training_data = []
-	for qid, query in id2query.items():
+	for qid, query in tqdm(id2query.items(), desc=lang):
 		if qid not in folds["train"]:
 			continue
 		
@@ -74,8 +80,12 @@ def main():
 			print(f"Warning: {qid} could not be found in runfile")
 			continue
 
-		pos_docids = [docid for docid in train_runs[qid] if qrels.get(docid, 0) > 0]
-		neg_docids = [docid for docid in train_runs[qid] if qrels.get(docid, 0) == 0]
+		pos_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) > 0]
+		neg_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) == 0]
+
+		import pdb
+		# pdb.set_trace()
+
 		if len(pos_docids) == 0:
 			n_unfound += 1
 			continue
@@ -86,6 +96,11 @@ def main():
 	json.dump(training_data, open(output_json, "w"))
 	print(
 		"Finished.",
-		f"{len(training_data)} queries have been stored in {output_json}."
+		f"{len(training_data)} queries have been stored in {output_json}.",
 		f"{n_unfound} queries do not have positive doc found in {train_runfile}"
 	)
+
+
+
+if __name__ == "__main__":
+	main()
