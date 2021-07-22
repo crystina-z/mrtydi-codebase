@@ -6,9 +6,18 @@ import shutil
 import pytrec_eval
 from pprint import pprint
  
+os_join = os.path.join
+os_dir = os.path.dirname
+PACKAGE_PATH = os_dir(os_dir(__file__))
+sys.path.append(PACKAGE_PATH)
+
 from constants import *
 from utils import str_list, load_runs, load_qrels, run_command, aggregate_score
 
+
+if len(sys.argv) != 3:
+    print("Usage: python run_bm25_single.py /path/to/open_retrieval_dir lang")
+    exit()
 
 open_retrieval_dir = sys.argv[1]
 lang = sys.argv[2]

@@ -6,11 +6,15 @@ from argparse import ArgumentParser
 from collections import defaultdict, OrderedDict
 
 from lxml.html import fromstring
+
+os_join = os.path.join
+os_dir = os.path.dirname
+PACKAGE_PATH = os_dir(os_dir(__file__))
+sys.path.append(PACKAGE_PATH)
+
 from utils import lang_full2abbr, LANGS
 from utils import write_to_topic_tsv, write_qrels, document_to_trectxt
 
-
-os_join = os.path.join
 random.seed(123)
 TRAIN_RATIO = 0.8  # from the train set, we keep $TRAIN_RATIO qids in train set, and the rest in dev set
 
