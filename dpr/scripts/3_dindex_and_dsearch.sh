@@ -11,12 +11,16 @@
 nvidia-smi
 source /GW/NeuralIR/work/cuda-10.1_env.sh
 
-lang=bengali
-
 hf_model_dir="./models/hf-models"
 mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi"
+
+
+lang=bengali
+
 test_topic_fn="${mrtydi_data_dir}/ori/${lang}/topic.test.tsv"
 coll_json_dir="${mrtydi_data_dir}/test/${lang}_collection_jsonl"
+
+
 
 # files to output
 index_dir="${mrtydi_data_dir}/faiss_index/$lang"
