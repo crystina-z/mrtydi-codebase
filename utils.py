@@ -22,6 +22,13 @@ lang_full2abbr = OrderedDict({
 LANGS = lang_full2abbr
 
 
+def index(lst, element):
+    try:
+        return lst.index(element)
+    except:
+        return len(lst) + 1
+
+
 def str_list(lst):
     return list(map(str, lst)) 
 
