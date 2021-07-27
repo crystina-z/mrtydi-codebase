@@ -30,9 +30,10 @@ def plot_rank(sorted_ranks, color, label, **kwargs):
     Assume the (document) ranks is sorted by a certain criteiria 
     """
     for i, ranks in enumerate(sorted_ranks):
+        ranks = [min(ranks)]
         xs = [i for _ in range(len(ranks))]
         ys = ranks
-        plt.scatter(xs, ys, color=color, s=1, alpha=0.5, label=label, **kwargs)
+        plt.scatter(xs, ys, color=color, alpha=0.5, label=label, **kwargs)
 
 
 def main():
@@ -66,18 +67,25 @@ def main():
 
         # sorted_qids_bm25_ranks = sorted(bm25_ranks.items(), key=lambda kv: np.mean(kv[1]))
         # sorted_qids_bm25_ranks = sorted(bm25_ranks.items(), key=lambda kv: min(kv[1]))
-        # print()
-        sorted_qids = [qid for qid, _ in sorted(dpr_ranks.items(), key=lambda kv: min(kv[1]))]
 
-        sorted_bm25_ranks = [bm25_ranks[qid] for qid in sorted_qids]
-        sorted_dpr_ranks = [dpr_ranks[qid] for qid in sorted_qids]
-        sorted_hybrid_ranks = [hybrid_ranks[qid] for qid in sorted_qids]
+        all_qids = set(bm25_ranks) | set(dpr_ranks) | set(hybrid_ranks)
+        sorted_qids = [qid for qid in sorted(all_qids, key=lambda id: list(map(min, (
+            bm25_ranks.get(id, [1001]), hybrid_ranks.get(id, [1001]), dpr_ranks.get(id, [1001])
+            # hybrid_ranks.get(id, [1001]), bm25_ranks.get(id, [1001]), dpr_ranks.get(id, [1001])
+        ))))]
+
+        sorted_bm25_ranks = [bm25_ranks.get(qid, [1001]) for qid in sorted_qids]
+        sorted_dpr_ranks = [dpr_ranks.get(qid, [1001]) for qid in sorted_qids]
+        sorted_hybrid_ranks = [hybrid_ranks.get(qid, [1001]) for qid in sorted_qids]
+        # import pdb
+        # pdb.set_trace()
 
         fig = plt.figure()
-        plot_rank(sorted_bm25_ranks, color="tab:orange", label="bm25")
-        plot_rank(sorted_dpr_ranks, color="tab:green", label="DPR")
-        plot_rank(sorted_hybrid_ranks, color="tab:blue", label="Hybrid", marker="+")
+        plot_rank(sorted_bm25_ranks, color="tab:orange", label="bm25", s=3)
+        plot_rank(sorted_dpr_ranks, color="tab:green", label="DPR", s=3)
+        plot_rank(sorted_hybrid_ranks, color="tab:grey", label="Hybrid", marker="+", s=6)
 
+        plt.ylim(top=20, bottom=0)
         plt.savefig(f"{plot_dir}/bm25_dpr_rank.{lang}.triplet.png")
         # fig.close()
 
