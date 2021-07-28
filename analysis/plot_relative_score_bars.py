@@ -63,6 +63,6 @@ plot_dir = os.path.join(file_dir, "plots")
 
 plt.legend()
 plt.xticks(xs, langs)
-plt.ylabel("Reletive MRR comparing to tuned BM25")
+plt.ylabel("Relative MRR comparing to tuned BM25")
 plt.tight_layout()
 plt.savefig(f"{plot_dir}/relative_score_bars.png")
