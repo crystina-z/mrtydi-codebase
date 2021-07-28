@@ -14,8 +14,10 @@ sys.path.append(PACKAGE_PATH)
 from utils import load_runs, load_qrels, load_topic_tsv, load_collection_trec
 
 
-def get_train_runfile(dir):
-	fns = [fn for fn in glob.glob(f"{dir}/bm25.*train*") if "default" not in fn]
+def get_runfile(dir, mode):
+	assert mode in {'train', 'dev'} # we do not need jsonl for test set
+
+	fns = [fn for fn in glob.glob(f"{dir}/bm25.*{mode}*") if "default" not in fn]
 	if len(fns) == 0:
 		import pdb
 		pdb.set_trace()
@@ -56,49 +58,55 @@ def main():
 	qrels_fn = os_join(lang_dir, "qrels.txt")
 	coll_fn = os_join(lang_dir, "collection", "collection.txt")
 	runfile_dir = os_join(lang_dir, "runfiles")
-	train_runfile = get_train_runfile(runfile_dir)
-	assert all(map(os.path.exists, [topic_fn, folds_fn, qrels_fn, coll_fn]))
-	dpr_dir = os_join(lang_dir, "dpr_inputs")
-	output_json = os_join(dpr_dir, "train.json")
-	os.makedirs(dpr_dir, exist_ok=True)
 
+	assert all(map(os.path.exists, [topic_fn, folds_fn, qrels_fn, coll_fn]))
 	folds = json.load(open(folds_fn))
 	qrels = load_qrels(qrels_fn)
-	train_runs = load_runs(train_runfile)
-
 	id2query = load_topic_tsv(topic_fn)
 	id2doc = {id: doc for id, doc in load_collection_trec(coll_fn)}
 
-	# todo: add support to dev and test set
-	n_unfound = 0
-	training_data = []
-	for qid, query in tqdm(id2query.items(), desc=lang):
-		if qid not in folds["train"]:
+	dpr_dir = os_join(lang_dir, "dpr_inputs")
+
+	for set_name in ["train", "dev"]:
+		output_json = os_join(dpr_dir, f"{set_name}.json")
+		if os.path.exists(output_json):
+			print(f"Found existing {output_json}, skip.")
 			continue
+
+		os.makedirs(dpr_dir, exist_ok=True)
+
+		train_runfile = get_runfile(runfile_dir, mode=set_name)
+		train_runs = load_runs(train_runfile)
+		# todo: add support to dev and test set
+		n_unfound = 0
+		training_data = []
+		for qid, query in tqdm(id2query.items(), desc=f"{lang} ({set_name})"):
+			if qid not in folds[set_name]:
+				continue
 		
-		if qid not in train_runs:
-			print(f"Warning: {qid} could not be found in runfile")
-			continue
+			if qid not in train_runs:
+				print(f"Warning: {qid} could not be found in runfile")
+				continue
 
-		pos_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) > 0]
-		neg_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) == 0]
+			pos_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) > 0]
+			neg_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) == 0]
 
-		import pdb
-		# pdb.set_trace()
+			import pdb
+			# pdb.set_trace()
 
-		if len(pos_docids) == 0:
-			n_unfound += 1
-			continue
+			if len(pos_docids) == 0:
+				n_unfound += 1
+				continue
 
-		json_entry = format_json_entry(query, pos_docids, neg_docids, id2doc)
-		training_data.append(json_entry)
+			json_entry = format_json_entry(query, pos_docids, neg_docids, id2doc)
+			training_data.append(json_entry)
 	
-	json.dump(training_data, open(output_json, "w"))
-	print(
-		"Finished.",
-		f"{len(training_data)} queries have been stored in {output_json}.",
-		f"{n_unfound} queries do not have positive doc found in {train_runfile}"
-	)
+		json.dump(training_data, open(output_json, "w"))
+		print(
+			"Finished.",
+			f"{len(training_data)} queries have been stored in {output_json}.",
+			f"{n_unfound} queries do not have positive doc found in {train_runfile}"
+		)
 
 
 

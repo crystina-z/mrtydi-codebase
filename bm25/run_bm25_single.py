@@ -154,7 +154,7 @@ def tune_parameters(k1_s, b_s, hits, is_rm3=False, fb_terms=None, fb_docs=None, 
     params = best[2]
     suffix = ".".join([f"{k}={v}" for k, v in params.items()])
 
-    for set_name in ["train", "test"]:
+    for set_name in ["train", "dev", "test"]:
         topic_fn = f"{root_dir}/topic.{set_name}.tsv"
         # runfile = f"{runfile_dir}/bm25.{set_name}.k1={k1}.b1={b}" if not is_rm3 else \
         #     f"{runfile_dir}/bm25rm3.{set_name}.k1={k1}.b1={b}.fb_term={fb_term}.fb_doc={fb_doc}.ori_weight={ori_weight}"
@@ -196,7 +196,10 @@ print("running bm25")
 score, params = tune_parameters(    # bm25
     k1_s=k1_s, b_s=b_s, hits=hits, is_rm3=False)
 
+'''
+# skip rm3 as Anserini does not support the multi-lingual RM3 so far
 print("running bm25rm3")
 score, params = tune_parameters(    # rm3 (does not tune k1 and b to save time and space)
     k1_s=[params["k1"]], b_s=[params["b"]], hits=hits, is_rm3=True, 
     fb_terms=fb_terms, fb_docs=fb_docs, ori_weights=ori_weights)
+'''
