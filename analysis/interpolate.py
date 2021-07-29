@@ -55,10 +55,20 @@ def keep_topk(doc2score, k=1000):
     return {docid: score for docid, score in docid_scores}
 
 
-def interpolate(bm25, mdpr, qids_to_interpolate):
+def interpolate(bm25, mdpr, interpolate_qids, interpolate_k=0, allow_mdpr_doc=False):
+    """
+    bm25 and mdpr are two run objects, with the format {qid-0: {docid-0: score}, qid-1: {}...};
+    interpolate_qids: a set of qids to consider in the interpolation;
+    interpolate_k: only conduct interpolation on the top k documents;
+    allow_mdpr_doc: 
+        only used when interpolate_k > 0, indicating while we are using hybrid score for the top-k bm25, 
+        do we allow to add docids in mdpr but not in *entire* bm25 list to be added in this list.
+        Note that this means when adding *n* mdpr docids to top-k, *n* bm25 documents would be squeezed off 
+        (i.e. we lose them forever).
+    """
     interpolated = {}
     for qid in bm25:
-        if (qid not in qids_to_interpolate) or (qid not in mdpr):
+        if (qid not in interpolate_qids) or (qid not in mdpr):
             interpolated[qid] = deepcopy(normalize(bm25[qid]))
             continue
 
@@ -68,6 +78,23 @@ def interpolate(bm25, mdpr, qids_to_interpolate):
         interpolated_docid2scores = {
             docid: (normalized_bm25.get(docid, 0) + normalized_mdpr.get(docid, 0) / 2) for docid in all_docids
         }
+        if interpolate_k > 0:  # only use the new score for the top100 documents; and make sure they are always top100
+            top_k_bm25 = keep_topk(normalized_bm25, k=interpolate_k)
+
+            if not allow_mdpr_doc:
+                topk_interpolated = {docid: interpolated_docid2scores[docid] + 1 if docid in top_k_bm25 else normalized_bm25[docid] for docid in normalized_bm25}
+            else:
+                topk_interpolated = {
+                    docid: interpolated_docid2scores[docid] + 1 if ((docid in top_k_bm25) or (docid not in normalized_bm25)) else normalized_bm25[docid] 
+                    for docid in interpolated_docid2scores
+                }  # consider all docids rather than just the ones from bm25
+                topk_interpolated = keep_topk(topk_interpolated, k=interpolate_k)
+
+                if interpolate_k == 1000:
+                    assert set(topk_interpolated) == set(keep_topk(interpolated_docid2scores, k=1000)) # sanity check
+
+            interpolated_docid2scores = topk_interpolated
+
         # keep only the top 1k
         interpolated[qid] = keep_topk(interpolated_docid2scores, k=1000)
     return interpolated
@@ -86,7 +113,10 @@ def main(args):
     bm25 = load_runs(args.bm25_runfile)
     mdpr = load_runs(args.mdpr_runfile)
     qrels = load_qrels(args.qrels_file)
+
     criterion = args.criterion
+    interpolate_top_k = args.interpolate_top_k
+    allow_mdpr_doc = args.allow_mdpr_doc
 
     qid2recall1k = evaluate(qrels, runs=bm25, metrics={criterion}, aggregate=False)
     all_queries = set(bm25) | set(mdpr)
@@ -106,7 +136,7 @@ def main(args):
         ["ALL", "R@k>0", "R@k ==0"],
         [all_queries, qid_pos_recall1k, qid_zero_recall1k]
     ):
-        interpolated = interpolate(bm25, mdpr, qids_to_interpolate)
+        interpolated = interpolate(bm25, mdpr, qids_to_interpolate, interpolate_k=interpolate_top_k, allow_mdpr_doc=allow_mdpr_doc)
         score = evaluate(qrels, interpolated, metrics=metrics, aggregate=True)
         print(f"{tag + ' [ ' + str(len(qids_to_interpolate)) + ' ]':20}", stringify(score))
 
@@ -118,6 +148,8 @@ if __name__ == "__main__":
     parser.add_argument("--qrels-file", "-q", type=str, required=True)
 
     parser.add_argument("--criterion", "-c", type=str, default="recall_1000")
+    parser.add_argument("--interpolate-top-k", "-k", type=int, default=0, help="If not zero, then only the top k documents in bm25 would be interpolated with mDPR.")
+    parser.add_argument("--allow-mdpr-doc", action="store_true", default=False, help="Only used when interpolate-top-k > 0.") 
 
     parser.add_argument("--output-dir", "-o", type=str, default="./tmp-interpolation", help="If not given, a ./tmp-interpolation folder would be created.")
 
