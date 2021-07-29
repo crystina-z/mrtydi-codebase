@@ -18,7 +18,8 @@ from utils import load_runs, load_qrels
 
 import pdb
 
-metrics = {"ndcg_cut_10", "recall_10", "recall_1000", "recip_rank"}
+# metrics = {"ndcg_cut_10", "recall_10", "recall_1000", "recip_rank"}
+metrics = {"ndcg_cut_10", "recip_rank"}
 
 
 def evaluate(qrels, runs, metrics, aggregate):
@@ -28,20 +29,13 @@ def evaluate(qrels, runs, metrics, aggregate):
         qid: [metrics_dict.get(m, -1) for m in metrics] for qid, metrics_dict in eval_results.items()
     }
 
-    # pdb.set_trace()
-
     if aggregate: 
-        # scores = [[metrics_dict.get(m, -1) for m in metrics] for metrics_dict in eval_results.values()] # [n_queries * [n_metrics * scalar]]
-        # pdb.set_trace()
         scores = list(scores.values())
         scores = np.array(scores).mean(axis=0).tolist()
         scores = dict(zip(metrics, scores))
     else:
-        scores = {
-            qid: dict(zip(metrics, metric_scores)) for qid, metric_scores in scores.items()
-        }
+        scores = {qid: dict(zip(metrics, metric_scores)) for qid, metric_scores in scores.items()}
 
-    # pdb.set_trace()
     return scores
 
 
@@ -81,7 +75,8 @@ def interpolate(bm25, mdpr, qids_to_interpolate):
 
 def stringify(dct):
     kv = sorted(dct.items())
-    return " ".join([f"{k}: %.4f" % v for k, v in kv])
+    # return " ".join([f"{k}: %.4f" % v for k, v in kv])
+    return "\t".join([f"%.4f" % v for k, v in kv])
 
 
 def main(args):
@@ -91,27 +86,29 @@ def main(args):
     bm25 = load_runs(args.bm25_runfile)
     mdpr = load_runs(args.mdpr_runfile)
     qrels = load_qrels(args.qrels_file)
+    criterion = args.criterion
 
-    qid2recall1k = evaluate(qrels, runs=bm25, metrics={"recall_1000"}, aggregate=False)
+    qid2recall1k = evaluate(qrels, runs=bm25, metrics={criterion}, aggregate=False)
     all_queries = set(bm25) | set(mdpr)
-    qid_pos_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid]["recall_1000"] > 0}
-    qid_zero_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid]["recall_1000"] == 0} | (set(mdpr) - set(bm25))
+    qid_pos_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid][criterion] > 0}
+    qid_zero_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid][criterion] == 0} | (set(mdpr) - set(bm25))
 
-    # pdb.set_trace()
     assert len(qid_zero_recall1k) + len(qid_pos_recall1k) == len(all_queries)
+
+    # print(f"{'':20}NDCG@10\tR@10\tR@1000\tMRR")
+    print(f"{'':20}NDCG@10\tMRR")
 
     for tag, runs in zip(["BM25", "mDPR"], [bm25, mdpr]):
         score = evaluate(qrels, runs, metrics=metrics, aggregate=True)
         print(f"{tag:20}", stringify(score))
 
-    # for agg_method in [None, "recall > 0", "recall == 0"]:
     for tag, qids_to_interpolate in zip(
-        ["ALL", "R@1k>0", "R@1k==0"],
+        ["ALL", "R@k>0", "R@k ==0"],
         [all_queries, qid_pos_recall1k, qid_zero_recall1k]
     ):
         interpolated = interpolate(bm25, mdpr, qids_to_interpolate)
         score = evaluate(qrels, interpolated, metrics=metrics, aggregate=True)
-        print(f"{tag + ' [' + str(len(qids_to_interpolate)) + ']':20}", stringify(score))
+        print(f"{tag + ' [ ' + str(len(qids_to_interpolate)) + ' ]':20}", stringify(score))
 
 
 if __name__ == "__main__":
@@ -119,6 +116,8 @@ if __name__ == "__main__":
     parser.add_argument("--bm25-runfile", "-bm25", type=str, required=True)
     parser.add_argument("--mdpr-runfile", "-mdpr", type=str, required=True)
     parser.add_argument("--qrels-file", "-q", type=str, required=True)
+
+    parser.add_argument("--criterion", "-c", type=str, default="recall_1000")
 
     parser.add_argument("--output-dir", "-o", type=str, default="./tmp-interpolation", help="If not given, a ./tmp-interpolation folder would be created.")
 
