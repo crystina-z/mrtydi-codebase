@@ -49,7 +49,7 @@ def normalize(doc2score):
     """ scale all scores from orignal range to (0, 1) """
     min_score, max_score = min(doc2score.values()), max(doc2score.values())
     ori_range = max_score - min_score
-    if ori_range == 1: # all docid hv same score 
+    if ori_range == 0: # all docid hv same score 
         assert len(set(doc2score.values())) == 1
         return {docid: 0.5 for docid in doc2score}
 
@@ -79,6 +79,11 @@ def interpolate(bm25, mdpr, qids_to_interpolate):
     return interpolated
 
 
+def stringify(dct):
+    kv = sorted(dct.items())
+    return " ".join([f"{k}: %.4f" % v for k, v in kv])
+
+
 def main(args):
     output_dir = args.output_dir
     os.makedirs(output_dir, exist_ok=True)
@@ -95,14 +100,18 @@ def main(args):
     # pdb.set_trace()
     assert len(qid_zero_recall1k) + len(qid_pos_recall1k) == len(all_queries)
 
+    for tag, runs in zip(["BM25", "mDPR"], [bm25, mdpr]):
+        score = evaluate(qrels, runs, metrics=metrics, aggregate=True)
+        print(f"{tag:20}", stringify(score))
+
     # for agg_method in [None, "recall > 0", "recall == 0"]:
     for tag, qids_to_interpolate in zip(
-        ["ALL", "BM25 R@1k > 0", "BM25 R@1k == 0"],
+        ["ALL", "R@1k>0", "R@1k==0"],
         [all_queries, qid_pos_recall1k, qid_zero_recall1k]
     ):
         interpolated = interpolate(bm25, mdpr, qids_to_interpolate)
         score = evaluate(qrels, interpolated, metrics=metrics, aggregate=True)
-        print(f"{tag:20}", score)
+        print(f"{tag + ' [' + str(len(qids_to_interpolate)) + ']':20}", stringify(score))
 
 
 if __name__ == "__main__":
