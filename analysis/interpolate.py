@@ -57,7 +57,7 @@ def normalize(doc2score):
 
 
 def keep_topk(doc2score, k=1000):
-    docid_scores = sorted(doc2score.items(), key=lambda kv: int(kv[1]), reverse=True)[:k]
+    docid_scores = sorted(doc2score.items(), key=lambda kv: float(kv[1]), reverse=True)[:k]
     return {docid: score for docid, score in docid_scores}
 
 
