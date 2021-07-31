@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 import pytrec_eval
+import matplotlib.pyplot as plt
 
 file_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(file_dir))
@@ -106,6 +107,23 @@ def stringify(dct):
     return "\t".join([f"%.4f" % v for k, v in kv])
 
 
+def interpolate_main(bm25, mdpr, qrels, criterion, metrics, interpolate_top_k, allow_mdpr_doc):
+    qid2recall1k = evaluate(qrels, runs=bm25, metrics={criterion}, aggregate=False)
+    qid_pos_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid][criterion] > 0}
+    qid_zero_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid][criterion] == 0} | (set(mdpr) - set(bm25))
+    all_queries = set(bm25) | set(mdpr)
+    assert len(qid_zero_recall1k) + len(qid_pos_recall1k) == len(all_queries)
+
+    # for tag, qids_to_interpolate in zip(
+    #     ["ALL", "R@k>0", "R@k ==0"],
+    #     [all_queries, qid_pos_recall1k, qid_zero_recall1k]
+    # ):
+    interpolated = interpolate(bm25, mdpr, qid_pos_recall1k, interpolate_k=interpolate_top_k, allow_mdpr_doc=allow_mdpr_doc)
+    score = evaluate(qrels, interpolated, metrics=metrics, aggregate=True)
+    # print(f"{tag + ' [ ' + str(len(qids_to_interpolate)) + ' ]':20}", stringify(score))
+    return score
+
+
 def main(args):
     output_dir = args.output_dir
     os.makedirs(output_dir, exist_ok=True)
@@ -114,31 +132,82 @@ def main(args):
     mdpr = load_runs(args.mdpr_runfile)
     qrels = load_qrels(args.qrels_file)
 
+    # all_k = [10, 20, 50, 100, 1000]
+    all_k = [10, 20, 50, 100]
     criterion = args.criterion
-    interpolate_top_k = args.interpolate_top_k
-    allow_mdpr_doc = args.allow_mdpr_doc
+    # interpolate_top_k = args.interpolate_top_k
+    # allow_mdpr_doc = args.allow_mdpr_doc
 
-    qid2recall1k = evaluate(qrels, runs=bm25, metrics={criterion}, aggregate=False)
+    # print(f"{'':20}NDCG@10\tMRR")
     all_queries = set(bm25) | set(mdpr)
-    qid_pos_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid][criterion] > 0}
-    qid_zero_recall1k = {qid for qid in qid2recall1k if qid2recall1k[qid][criterion] == 0} | (set(mdpr) - set(bm25))
+ 
+    # for tag, runs in zip(["BM25", "mDPR"], [bm25, mdpr]):
+    bm25_score = evaluate(qrels, bm25, metrics=metrics, aggregate=True)
+    mdpr_score = evaluate(qrels, mdpr, metrics=metrics, aggregate=True)
+    interpolated = interpolate(bm25, mdpr, all_queries, interpolate_k=1000, allow_mdpr_doc=True)
+    hybrid_score = evaluate(qrels, interpolated, metrics=metrics, aggregate=True)
 
-    assert len(qid_zero_recall1k) + len(qid_pos_recall1k) == len(all_queries)
+    metric = "ndcg_cut_10"
+    plt.plot([0, all_k[-1]], [bm25_score[metric]] * 2, label="BM25", color="tab:pink", linestyle="--")
+    # plt.plot([0, 1000], [mdpr_score[metric]] * 2, label="mDPR")
+    plt.plot([0, all_k[-1]], [hybrid_score[metric]] * 2, label="Hybrid", color="tab:grey", linestyle="--")
 
-    # print(f"{'':20}NDCG@10\tR@10\tR@1000\tMRR")
-    print(f"{'':20}NDCG@10\tMRR")
+    for allow_mdpr_doc in [True, False]: 
+        kwargs = {"linestyle": "--" if allow_mdpr_doc else "-"}
+        label = "Add mdpr doc" if allow_mdpr_doc else "No mdpr doc" 
+        scores = [
+            interpolate_main(bm25, mdpr, qrels, criterion, metrics, interpolate_top_k=k, allow_mdpr_doc=allow_mdpr_doc)[metric]
+            for k in all_k
+        ]
+        plt.scatter(all_k, scores, color="tab:blue", s=10)
+        plt.plot(all_k, scores, label=label, color="tab:blue", **kwargs)
 
-    for tag, runs in zip(["BM25", "mDPR"], [bm25, mdpr]):
-        score = evaluate(qrels, runs, metrics=metrics, aggregate=True)
-        print(f"{tag:20}", stringify(score))
+    plt.legend()
+    plt.xticks(ticks=all_k, labels=list(map(str, all_k)))
+    plt.savefig("test.png")
 
-    for tag, qids_to_interpolate in zip(
-        ["ALL", "R@k>0", "R@k ==0"],
-        [all_queries, qid_pos_recall1k, qid_zero_recall1k]
-    ):
-        interpolated = interpolate(bm25, mdpr, qids_to_interpolate, interpolate_k=interpolate_top_k, allow_mdpr_doc=allow_mdpr_doc)
-        score = evaluate(qrels, interpolated, metrics=metrics, aggregate=True)
-        print(f"{tag + ' [ ' + str(len(qids_to_interpolate)) + ' ]':20}", stringify(score))
+
+def main_q(args):
+    output_dir = args.output_dir
+    os.makedirs(output_dir, exist_ok=True)
+
+    bm25 = load_runs(args.bm25_runfile)
+    mdpr = load_runs(args.mdpr_runfile)
+    qrels = load_qrels(args.qrels_file)
+
+    metric = "ndcg_cut_10"
+    # all_k = [10, 20, 50, 100, 1000]
+    all_k = [10, 20, 50, 100]
+    # interpolate_top_k = args.interpolate_top_k
+    # allow_mdpr_doc = args.allow_mdpr_doc
+
+    # print(f"{'':20}NDCG@10\tMRR")
+    all_queries = set(bm25) | set(mdpr)
+ 
+    # for tag, runs in zip(["BM25", "mDPR"], [bm25, mdpr]):
+    bm25_score = evaluate(qrels, bm25, metrics=metrics, aggregate=True)
+    mdpr_score = evaluate(qrels, mdpr, metrics=metrics, aggregate=True)
+    interpolated = interpolate(bm25, mdpr, all_queries, interpolate_k=1000, allow_mdpr_doc=True)
+    hybrid_score = evaluate(qrels, interpolated, metrics=metrics, aggregate=True)
+
+    plt.plot([0, all_k[-1]], [bm25_score[metric]] * 2, label="BM25", color="tab:pink", linestyle="--")
+    # plt.plot([0, 1000], [mdpr_score[metric]] * 2, label="mDPR")
+    plt.plot([0, all_k[-1]], [hybrid_score[metric]] * 2, label="Hybrid", color="tab:grey", linestyle="--") 
+
+    # criterion = args.criterion
+    for allow_mdpr_doc in [True, False]: 
+        kwargs = {"linestyle": "--" if allow_mdpr_doc else "-"}
+        label = "Add mdpr doc" if allow_mdpr_doc else "No mdpr doc" 
+        scores = [
+            interpolate_main(bm25, mdpr, qrels, f"recall_{k}", metrics, interpolate_top_k=100, allow_mdpr_doc=allow_mdpr_doc)[metric]
+            for k in all_k
+        ]
+        plt.scatter(all_k, scores, color="tab:blue", s=10)
+        plt.plot(all_k, scores, label=label, color="tab:blue", **kwargs)
+
+    plt.legend()
+    plt.xticks(ticks=all_k, labels=list(map(str, all_k)))
+    plt.savefig("varying-criteria.png")
 
 
 if __name__ == "__main__":
@@ -154,4 +223,6 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", "-o", type=str, default="./tmp-interpolation", help="If not given, a ./tmp-interpolation folder would be created.")
 
     args = parser.parse_args()
+
     main(args)
+    # main_q(args)
