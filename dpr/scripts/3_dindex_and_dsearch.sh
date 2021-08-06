@@ -2,15 +2,17 @@
 #SBATCH -p gpu20
 #SBATCH --cpus-per-task=16
 #SBATCH --nodes 1
-#SBATCH --gres gpu:4
-#SBATCH --time 12:00:00
-#SBATCH --output outputs/index-search.dpr-mbert-uncased.ft-on-mrtydi.all.log
+#SBATCH --gres gpu:1
+#SBATCH --time 3-00:00:00
+#SBATCH --output outputs/index-search.desc.all.log
 
+# outputs/index-search.dpr-mbert-uncased.ft-on-mrtydi.all.log
 
 nvidia-smi
 source /GW/NeuralIR/work/cuda-10.1_env.sh
 
-hf_model_dir="./models/hf-models"
+cur_model_name="2021-07-26-mytydi.mbert-uncased.no-validation"
+hf_model_dir="./models/hf-models/$cur_model_name"
 mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi"
 
 
