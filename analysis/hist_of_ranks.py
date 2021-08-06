@@ -25,27 +25,32 @@ def _hist(data, bins, ax=None, **kwargs):
         """ to plot negative histgram"""
         fig = plt.Figure()
         ax = matplotlib.axes.Axes(fig, (0,0,0,0))
-        # ax = plt.axes(figure=fig, arg=(0,0,0,0))
-        n, _, _ = ax.hist(x=data, bins=bins)
+        n, _, patches = ax.hist(x=data, bins=bins)
         del ax, fig
-        # n, _, _ = plt.hist(x=data, bins=bins)
-        # del fig
-        return n
     else:
-        # pdb.set_trace()
-        ax.hist(x=data, bins=bins, **kwargs)
+        n, _, patches = ax.hist(x=data, bins=bins, **kwargs)
+
+    return n, patches
 
 
 def plot_hist(data, bins, ax, direction="pos", **kwargs):
     assert direction in {"pos", "neg"}
     if direction == "pos":  # normal plots
-        _hist(data, bins, ax=ax, **kwargs)
+        n, patches = _hist(data, bins, ax=ax, **kwargs)
     elif direction == "neg":  # normal plots
         n = _hist(data, bins)
         # pdb.set_trace()
         assert len(n) == len(bins) - 1
         neg_n = [-value for value in n]
-        _hist(data, bins, ax=ax, bottom=neg_n, **kwargs)  # plot the histogram at the neg axis
+        n, patches = _hist(data, bins, ax=ax, bottom=neg_n, **kwargs)  # plot the histogram at the neg axis
+    return n, patches 
+
+
+def plot_ratio(data, x_s, ax, **kwargs):
+    sum_data = sum(data) 
+    normalized_data = [x / sum_data for x in data]
+    return ax.plot(x_s, normalized_data, marker="x", **kwargs)
+    # ax.scatter(x_s, normalized_data, marker="x", **kwargs)
 
 
 def get_rank_list(qrels, runs):
@@ -69,6 +74,7 @@ def get_rank_list(qrels, runs):
 
 def main(args):
     tag = args.tag
+    mdpr_label = "mDPR" if tag == "dense" else "Hybrid"
 
     qrels = load_qrels(args.qrels_file)
     bm25 = load_runs(args.bm25_runfile)
@@ -80,27 +86,37 @@ def main(args):
     fig = plt.figure()
     ax = plt.gca()
 
-    common_args = {"alpha": 0.5}
-    # bins = [-1] + list(range(0, 60, 10)) + [100, 1000]
-    # bins = [-1] + list(range(0, 60, 10)) + [100]
+
+    common_args = {"alpha": 0.3}
     bins = [-10] + list(range(0, 110, 10))
-    plot_hist(bm25_ranks, bins=bins, ax=ax, direction="pos", label="BM25", color="tab:blue", **common_args)
-    # plot_hist(bm25_ranks, bins=bins, ax=ax, direction="neg", color="tab:blue", **common_args)
-    label = "mDPR" if tag == "dense" else "Hybrid"
-    # plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="neg", label=label, color="tab:orange", **common_args)
-    plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="pos", label=label, color="tab:orange", **common_args)
+    bm25_n, bm25_patches = plot_hist(bm25_ranks, bins=bins, ax=ax, direction="pos", label="BM25", color="tab:blue", **common_args)
+    mdpr_n, mdpr_patches = plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="pos", label=mdpr_label, color="tab:orange", **common_args)
 
     plt.xticks(bins, ["Unfound"] + bins[1:])
+    # plt.legend()
 
-    plt.legend()
     plt.grid(color="lightgray")
     plt.xlabel("Top-k documents")
     plt.ylabel("No. of Q with relevant document")
     lang = args.lang.capitalize()
 
+    # plot the right axis
+    ax_right = ax.twinx()
+    x_s = [
+        (bins[i] + bins[i + 1]) / 2 for i in range(1, len(bins) - 1)
+    ]
+    common_args = {"alpha": 0.9}
+    bm25_ratio_patches = plot_ratio(bm25_n[1:], x_s, ax=ax_right, color="tab:blue", label="BM25 (ratio)", **common_args)
+    mdpr_ratio_patches = plot_ratio(mdpr_n[1:], x_s, ax=ax_right, color="tab:orange", label=f"{mdpr_label} (ratio)", **common_args)
+    ax_right.set_ylabel("% of Queries among all queries with D_rel found")
+
+    # combined all labels
+    all_patches = bm25_patches.patches + mdpr_patches.patches + bm25_ratio_patches + mdpr_ratio_patches
+    labels = [l.get_label() for l in all_patches]
+    ax_right.legend(all_patches, labels, loc=0)
+
     plt.title(lang)
     plt.tight_layout()
-
     plt.savefig(f"{plot_dir}/rank-hist/{tag}/rank-hist-{lang}-{tag}.png")
 
 

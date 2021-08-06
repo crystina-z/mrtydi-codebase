@@ -36,7 +36,6 @@ n_training_data_rank = [
 ]
 
 scores = pd.read_csv("stats/scores.tsv", delimiter="\t", header=0)
-import pdb
 
 plt.figure(figsize=(8, 8))
 i = 1
