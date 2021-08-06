@@ -16,6 +16,7 @@ n_rows = len(scores)
 def filter_fn(df):
     return (df != "BM25") & (df != "BM25-tuned")
 
+
 methods = scores["method"]
 valid_methods = methods[filter_fn(methods)]
 n_methods = len(valid_methods)
@@ -45,19 +46,35 @@ def barplot():
             face_color = (*mat_colors.to_rgba(edge_color)[:3], 0.6)
 
             if i == 0:
-                rects = plt.bar(x=cur_x, width=bar_width, height=rel_score, color=face_color, edgecolor=edge_color, label=method)
+                rects = plt.bar(
+                    x=cur_x,
+                    width=bar_width,
+                    height=rel_score,
+                    color=face_color,
+                    edgecolor=edge_color,
+                    label=method,
+                )
             else:
-                rects = plt.bar(x=cur_x, width=bar_width, height=rel_score, color=face_color, edgecolor=edge_color)
+                rects = plt.bar(
+                    x=cur_x,
+                    width=bar_width,
+                    height=rel_score,
+                    color=face_color,
+                    edgecolor=edge_color,
+                )
             plt.bar_label(rects, padding=1)
 
-        i += (bar_width * n_methods + distance)
-
+        i += bar_width * n_methods + distance
 
     plt.plot(
         [xs[0] - bar_width * n_methods, xs[-1] + bar_width],
-        [1, 1], label="BM25 (tuned)", linestyle="--", color="tab:grey")
+        [1, 1],
+        label="BM25 (tuned)",
+        linestyle="--",
+        color="tab:grey",
+    )
 
-    file_dir = os.path.dirname(__file__) 
+    file_dir = os.path.dirname(__file__)
     plot_dir = os.path.join(file_dir, "plots")
 
     plt.legend()
@@ -72,19 +89,23 @@ def scatter():
     xs, langs = [], []
 
     # lang 2 all score
-    lang2all_scores = {lang: {
-        "bm25": scores[lang][methods == "BM25-tuned"].item(),
-        "mDPR": scores[lang][methods == "mDPR"].item(),
-        "hybrid": scores[lang][methods == "hybrid"].item(),
-    } for lang in scores if lang != "method"}
-    lang2rel_scores = {lang: {
-        method: score / scores["bm25"] for method, score in scores.items()
-    } for lang, scores in lang2all_scores.items()} 
+    lang2all_scores = {
+        lang: {
+            "bm25": scores[lang][methods == "BM25-tuned"].item(),
+            "mDPR": scores[lang][methods == "mDPR"].item(),
+            "hybrid": scores[lang][methods == "hybrid"].item(),
+        }
+        for lang in scores
+        if lang != "method"
+    }
+    lang2rel_scores = {
+        lang: {method: score / scores["bm25"] for method, score in scores.items()}
+        for lang, scores in lang2all_scores.items()
+    }
 
     # sort according to relevant mdpr score
     lang_rel_scores = sorted(
-        lang2rel_scores.items(), 
-        key=lambda kv: (kv[1]["mDPR"], kv[1]["hybrid"])
+        lang2rel_scores.items(), key=lambda kv: (kv[1]["mDPR"], kv[1]["hybrid"])
     )
 
     # plot
@@ -103,11 +124,14 @@ def scatter():
     xticks, _ = plt.xticks()
     # print(xticks[0], xticks[-1])
     plt.plot(
-        [-0.5, len(lang_rel_scores) - 0.5], [1, 1],
-        color="tab:grey", label="BM25 (tuned)", linestyle="--",    
-    ) 
- 
-    file_dir = os.path.dirname(__file__) 
+        [-0.5, len(lang_rel_scores) - 0.5],
+        [1, 1],
+        color="tab:grey",
+        label="BM25 (tuned)",
+        linestyle="--",
+    )
+
+    file_dir = os.path.dirname(__file__)
     plot_dir = os.path.join(file_dir, "plots")
 
     plt.legend()
