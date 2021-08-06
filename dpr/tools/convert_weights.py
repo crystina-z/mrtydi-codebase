@@ -59,10 +59,10 @@ def main(args):
     output_model_path = args.output_model_path
 
     if ctx_model_path:
-        convert_context_model(inp_file=ctx_model_path, outp_dir=os.path.join(output_model_path, "ctx_model"))
+        convert_context_model(inp_file=ctx_model_path, outp_dir=os.path.join(output_model_path, "mdpr-context-encoder"))
 
     if q_model_path:
-        convert_question_model(inp_file=ctx_model_path, outp_dir=os.path.join(output_model_path, "q_model"))
+        convert_question_model(inp_file=ctx_model_path, outp_dir=os.path.join(output_model_path, "mdpr-question-encoder"))
 
 
 if __name__ == "__main__":
