@@ -11,7 +11,7 @@ os_dir = os.path.dirname
 PACKAGE_PATH = os_dir(os_dir(os_dir(os.path.abspath(__file__))))
 sys.path.append(PACKAGE_PATH)
 
-from utils import load_runs, load_qrels, load_topic_tsv, load_collection_trec
+from utils import load_runs, load_qrels, load_topic_tsv, load_collection_jsonl 
 
 
 def get_runfile(dir, mode):
@@ -45,27 +45,33 @@ def format_json_entry(query, pos_docids, neg_docids, id2doc):
 
 
 def main():
-	if len(sys.argv) != 3:
-		print("Usage: python run_bm25_single.py /path/to/open_retrieval_dir lang")
+	if len(sys.argv) != 4:
+		print("Usage: python tools/generate_dpr_json.py /path/to/open_retrieval_dir /path/to/output lang")
 		exit()
 
 	open_retrieval_dir = sys.argv[1]
-	lang = sys.argv[2]
+	output_dir = sys.argv[2]
+	lang = sys.argv[3]
 	lang_dir = os_join(open_retrieval_dir, lang) 
+	dpr_dir = os_join(output_dir, lang)
+
+	if all([os.path.exists(os_join(dpr_dir, f"{set_name}.json")) for set_name in ["train", "dev"]]):
+		print("Both train and dev jsonl found, skip.")
+		exit()
 
 	topic_fn = os_join(lang_dir, "topic.tsv")
 	folds_fn = os_join(lang_dir, "folds.json")
 	qrels_fn = os_join(lang_dir, "qrels.txt")
-	coll_fn = os_join(lang_dir, "collection", "collection.txt")
+	coll_fn = os_join(lang_dir, "collection", "docs.jsonl")
 	runfile_dir = os_join(lang_dir, "runfiles")
 
 	assert all(map(os.path.exists, [topic_fn, folds_fn, qrels_fn, coll_fn]))
 	folds = json.load(open(folds_fn))
 	qrels = load_qrels(qrels_fn)
 	id2query = load_topic_tsv(topic_fn)
-	id2doc = {id: doc for id, doc in load_collection_trec(coll_fn)}
+	id2doc = {id: doc for id, doc in load_collection_jsonl(coll_fn)}
 
-	dpr_dir = os_join(lang_dir, "dpr_inputs")
+	# dpr_dir = os_join(lang_dir, "dpr_inputs")
 
 	for set_name in ["train", "dev"]:
 		output_json = os_join(dpr_dir, f"{set_name}.json")
@@ -77,7 +83,7 @@ def main():
 
 		train_runfile = get_runfile(runfile_dir, mode=set_name)
 		train_runs = load_runs(train_runfile)
-		# todo: add support to dev and test set
+
 		n_unfound = 0
 		training_data = []
 		for qid, query in tqdm(id2query.items(), desc=f"{lang} ({set_name})"):
@@ -90,9 +96,6 @@ def main():
 
 			pos_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) > 0]
 			neg_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) == 0]
-
-			import pdb
-			# pdb.set_trace()
 
 			if len(pos_docids) == 0:
 				n_unfound += 1
@@ -112,3 +115,4 @@ def main():
 
 if __name__ == "__main__":
 	main()
+
