@@ -12,7 +12,7 @@ index_dir="${results_dir}/faiss_index"
 run_dir="${results_dir}/runs"
 mkdir -p $run_dir
 
-if [! -d $hf_model_dir ]; then
+if [ ! -d $hf_model_dir ]; then
 	echo "Cannot find $hf_model_dir"
 fi
 
