@@ -14,19 +14,19 @@ lang2abbr = {
     "russian": "ru",
     "arabic": "ar",
     "bengali": "bn",
-    "indonesian": "in",
+    "indonesian": "id",
     "korean": "ko",
     "swahili": "sw",
     "telugu": "te",
 }
 optimize = "recip_rank"
 
-collection_type = "TrecCollection"
+collection_type = "JsonCollection"
 topicreader = "TsvString"
 
 # parameters
 hits = 1000
-k1_s = [float("%.2f" % v) for v in np.arange(0.4, 1.6, 0.1)]
+k1_s = [float("%.2f" % v) for v in np.arange(0.1, 1.6, 0.1)]
 b_s = [float("%.2f" % v) for v in np.arange(0.1, 1.0, 0.1)]
 fb_terms = [5, 10, 20, 40] 
 fb_docs = [1, 2, 5, 10] 
