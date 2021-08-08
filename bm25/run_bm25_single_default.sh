@@ -2,6 +2,7 @@ open_retrieval_dir=$1
 lang=$2
 # anserini_dir="/path/to/anserini"
 root_dir="${open_retrieval_dir}/${lang}"
+output_dir="${open_retrieval_dir}/.."
 
 alias index="${ANSERINI_DIR}/target/appassembler/bin/IndexCollection"
 alias search="${ANSERINI_DIR}/target/appassembler/bin/SearchCollection"
@@ -56,8 +57,8 @@ echo $lang $lang_abbr
 
 # output directories
 collection_dir="${root_dir}/collection"
-index_path="${root_dir}/index/lucene-index.pos+docvectors+raw"
-runfile_dir="${root_dir}/runfiles"
+index_path="${output_dir}/bm25-indexes/${lang}/lucene-index.pos+docvectors+raw"
+runfile_dir="${output_dir}/bm25-runfiles/${lang}"
 
 for dir in $collection_dir $(dirname $index_path) $runfile_dir 
 do
