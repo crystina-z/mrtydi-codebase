@@ -1,52 +1,28 @@
-#!/bin/bash
-#SBATCH -p gpu20
-#SBATCH --cpus-per-task=16
-#SBATCH --nodes 1
-#SBATCH --gres gpu:1
-#SBATCH --time 3-00:00:00
-#SBATCH --output outputs/index-search.desc.all.log
-
-# outputs/index-search.dpr-mbert-uncased.ft-on-mrtydi.all.log
-
 nvidia-smi
 source /GW/NeuralIR/work/cuda-10.1_env.sh
 
-cur_model_name="2021-07-26-mytydi.mbert-uncased.no-validation"
-hf_model_dir="./models/hf-models/$cur_model_name"
-mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi"
+hf_model_dir=$1
+command=$2
+
+if [! -d $hf_model_dir ]; then
+	echo "Cannot find $hf_model_dir"
+fi
 
 
-for lang in telugu swahili thai indonesian arabic korean japanese russian english bengali
-do
+tmp_sbatch_dir="$hf_model_dir/logs"
+mkdir -p $tmp_sbatch_dir
+tmp_sbatch_script="$tmp_sbatch_dir/sbatch_script.sh"
 
-    test_topic_fn="${mrtydi_data_dir}/ori/${lang}/topic.test.tsv"
-    coll_json_dir="${mrtydi_data_dir}/test/${lang}_collection_jsonl"
+hf_model_line="hf_model_dir=$hf_model_dir"
 
-    # files to output
-    index_dir="${mrtydi_data_dir}/faiss_index/$lang"
-    runfile="runs/${lang}.run.mdpr.mrtydi-test/trec"
-
-    # 1. index
-    if [ ! -f "$index_dir/index" ]; then
-        mkdir -p $index_dir/..
-        python -m pyserini.dindex \
-            --encoder "$hf_model_dir/mdpr-context-encoder" \
-            --corpus $coll_json_dir \
-            --index $index_dir
-    else
-        echo "Found existing ${index_dir}/index, skip."
-    fi
-
-    # 2. search
-    if [ ! -f $runfile ]; then
-        python -m pyserini.dsearch \
-            --topics $test_topic_fn \
-            --index $index_dir \
-            --encoder "$hf_model_dir/mdpr-question-encoder" \
-            --output $runfile \
-            --batch-size 36 --threads 12
-    else
-        echo "Found existing ${runfile}, skip."
-    fi
-
-done
+# prepare temporary
+if [ "$command" = "sbatch" ]; then
+    echo scripts/slurm-header.sh > "$tmp_sbatch_script"
+    echo "#SBATCH --output $tmp_sbatch_dir/dindex-and-dsearch.output.log" > "$tmp_sbatch_script"
+    echo $hf_model_line >> "$tmp_sbatch_script"
+    echo scripts/scripts/_dindex_and_dsearch.sh >> "$tmp_sbatch_script"
+    sbatch "$tmp_sbatch_script"
+else
+    echo $hf_model_line >> "$tmp_sbatch_script"
+    sh "$tmp_sbatch_script"
+fi
