@@ -18,8 +18,8 @@ hf_model_line="hf_model_dir=$hf_model_dir"
 
 # prepare temporary
 if [ "$command" = "sbatch" ]; then
-    echo scripts/slurm-header.sh > "$tmp_sbatch_script"
-    echo "#SBATCH --output $tmp_sbatch_dir/dindex-and-dsearch.output.log" > "$tmp_sbatch_script"
+    cat scripts/slurm-header.sh > "$tmp_sbatch_script"
+    echo "#SBATCH --output $tmp_sbatch_dir/dindex-and-dsearch.output.log" >> "$tmp_sbatch_script"
     echo $hf_model_line >> "$tmp_sbatch_script"
     cat scripts/_dindex_and_dsearch.sh >> "$tmp_sbatch_script"
     sbatch "$tmp_sbatch_script"
