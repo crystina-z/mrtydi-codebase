@@ -1,5 +1,6 @@
 import os
 import gzip
+import json 
 import subprocess
 from collections import defaultdict, OrderedDict
 
@@ -148,6 +149,13 @@ def load_collection_trec(coll_fn):
             docid = ""
 
 
+def load_collection_jsonl(coll_fn):
+    with open(coll_fn) as f:
+        for line in f:
+            line = json.loads(line)
+            yield line["id"], line["contents"]
+
+
 def run_command(cmd):
     rtn = subprocess.run(cmd) 
     if rtn.returncode != 0:
@@ -165,3 +173,13 @@ def aggregate_score(qid2score):
         aggregated[name] = np.mean(aggregated[name])
 
     return aggregated
+
+
+def byte_str(text):
+  return text.encode("utf-8")
+
+
+def byte_slice(text, start, end, errors="replace"):
+  # Python 3 encodes text as character sequences, not byte sequences (like Python 2).
+  return byte_str(text)[start:end].decode("utf-8", errors=errors)
+

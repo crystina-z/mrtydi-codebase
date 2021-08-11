@@ -8,7 +8,7 @@ from pprint import pprint
  
 os_join = os.path.join
 os_dir = os.path.dirname
-PACKAGE_PATH = os_dir(os_dir(__file__))
+PACKAGE_PATH = os_dir(os_dir(os.path.abspath(__file__)))
 sys.path.append(PACKAGE_PATH)
 
 from constants import *
@@ -22,6 +22,7 @@ if len(sys.argv) != 3:
 open_retrieval_dir = sys.argv[1]
 lang = sys.argv[2]
 root_dir = f"{open_retrieval_dir}/{lang}"
+output_dir = os_dir(os.path.abspath(open_retrieval_dir))
 
 if not os.path.exists(root_dir):
     print(f"unfound directory {root_dir}")
@@ -31,20 +32,26 @@ if not os.path.exists(root_dir):
 lang_abbr = lang2abbr[lang] 
 
 # output directories
-collection_dir=f"{root_dir}/collection"
-collection_file=f"{root_dir}/collection/collection.txt"
-index_path=f"{root_dir}/index/lucene-index.pos+docvectors+raw"
-runfile_dir=f"{root_dir}/runfiles"
+collection_dir = f"{root_dir}/collection"
+collection_file = f"{root_dir}/collection/docs.jsonl"
 
+# index_path=f"{root_dir}/index/lucene-index.pos+docvectors+raw"
+# runfile_dir=f"{root_dir}/runfiles"
+index_path = os_join(output_dir, "bm25-indexes", lang, "lucene-index.pos+docvectors+raw")
+runfile_dir = os_join(output_dir, "bm25-runfiles", lang)
+print(index_path)
+print(runfile_dir)
 
 for dir in [collection_dir, os.path.dirname(index_path), runfile_dir]:
     os.makedirs(dir, exist_ok=True)
 
 
 # prepare collection
+'''
 if not os.path.exists(collection_file):
    shutil.copyfile(f"{root_dir}/collection.txt", collection_file)
-
+'''
+assert os.path.exists(collection_file), f"Cannot find collection file {collection_file}"
 
 def search_fn(
         index_path, topic_fn, topicreader, runfile, lang_abbr, 

@@ -2,12 +2,14 @@ open_retrieval_dir=$1
 mode=$2
 cmd=$3
 
-for lang in thai finnish bengali russian japanese arabic indonesian korean english
+for lang in arabic bengali english finnish indonesian japanese korean russian swahili telugu thai
 do
 	echo $lang
 	if [ "$mode" = "eval" ]; then
-		sh bm25/eval_single.sh $open_retrieval_dir $lang $cmd
+		sh eval_single.sh $open_retrieval_dir $lang $cmd
+	elif [ "$mode" = "default" ]; then
+		sh run_bm25_single_default.sh $open_retrieval_dir $lang
 	else
-		python bm25/run_bm25_single.py $open_retrieval_dir $lang
+		python run_bm25_single.py $open_retrieval_dir $lang
 	fi
 done

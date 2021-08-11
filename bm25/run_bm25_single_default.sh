@@ -2,6 +2,7 @@ open_retrieval_dir=$1
 lang=$2
 # anserini_dir="/path/to/anserini"
 root_dir="${open_retrieval_dir}/${lang}"
+output_dir="${open_retrieval_dir}/.."
 
 alias index="${ANSERINI_DIR}/target/appassembler/bin/IndexCollection"
 alias search="${ANSERINI_DIR}/target/appassembler/bin/SearchCollection"
@@ -36,7 +37,7 @@ case $lang in
         lang_abbr="bn"
     ;;
     "indonesian")
-        lang_abbr="in"
+        lang_abbr="id"
     ;;
     "korean")
         lang_abbr="ko"
@@ -56,23 +57,17 @@ echo $lang $lang_abbr
 
 # output directories
 collection_dir="${root_dir}/collection"
-collection_file="${root_dir}/collection/collection.txt"
-index_path="${root_dir}/index/lucene-index.pos+docvectors+raw"
-runfile_dir="${root_dir}/runfiles"
+index_path="${output_dir}/bm25-indexes/${lang}/lucene-index.pos+docvectors+raw"
+runfile_dir="${output_dir}/bm25-runfiles/${lang}"
 
 for dir in $collection_dir $(dirname $index_path) $runfile_dir 
 do
     mkdir -p $dir
 done
 
-# prepare collection
-if [ ! -f $collection_file ]; then
-	cp "${root_dir}/collection.txt" $collection_file
-fi
-
 
 # index 
-collection_type=TrecCollection
+collection_type=JsonCollection
 if [ ! -d $index_path ]; then
     cmd="-collection $collection_type -input $collection_dir -index $index_path -generator DefaultLuceneDocumentGenerator -threads 16 -storePositions -storeDocvectors -storeRaw"
 
@@ -88,13 +83,14 @@ fi
 hits=1000
 topicreader="TsvString"
 
-for set_name in "train" "test"
+for set_name in "train" "dev" "test"
 do
     # bm25
     topic_fn="${root_dir}/topic.${set_name}.tsv"
     runfile="${runfile_dir}/bm25.${set_name}.default.txt"
     if [ ! -f $runfile ]; then
         cmd="-index $index_path -topics $topic_fn -topicreader $topicreader -output $runfile -bm25 -threads 16 -hits $hits"
+	echo "$cmd -language $lang_abbr"
 
         if [ "$lang_abbr" = "te" ] || [ "$lang_abbr" = "sw" ]; then
             search $cmd -pretokenized
@@ -103,20 +99,5 @@ do
         fi
     fi
 
-    # bm25 + rm3 
-    runfile="${runfile_dir}/bm25rm3.${set_name}.default.txt"
-    if [ ! -f $runfile ]; then
-        cmd="-index $index_path -topics $topic_fn -topicreader $topicreader -output $runfile -bm25 -rm3 -threads 16 -hits $hits"
-
-        if [ "$lang_abbr" = "te" ] || [ "$lang_abbr" = "sw" ]; then
-            search $cmd -pretokenized
-        else
-            search $cmd -language $lang_abbr
-        fi
-    fi
-
-    # evaluate
-    # qrels_fn="${root_dir}/qrels.${set_name}.txt"
-    # trec_eval $qrels_fn $runfile
 done
 

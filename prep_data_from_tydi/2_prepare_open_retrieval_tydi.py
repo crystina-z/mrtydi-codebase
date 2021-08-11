@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import random
 
@@ -9,11 +10,11 @@ from lxml.html import fromstring
 
 os_join = os.path.join
 os_dir = os.path.dirname
-PACKAGE_PATH = os_dir(os_dir(__file__))
+PACKAGE_PATH = os_dir(os_dir(os.path.abspath(__file__)))
 sys.path.append(PACKAGE_PATH)
 
 from utils import lang_full2abbr, LANGS
-from utils import write_to_topic_tsv, write_qrels, document_to_trectxt
+from utils import write_to_topic_tsv, write_qrels, document_to_trectxt, byte_str, byte_slice
 
 random.seed(123)
 TRAIN_RATIO = 0.8  # from the train set, we keep $TRAIN_RATIO qids in train set, and the rest in dev set
@@ -50,7 +51,8 @@ def jsonl_loader(jsonl_path, expected_lang):
 
             passages = [
                 " ".join(
-                    doc[span["plaintext_start_byte"]:span["plaintext_end_byte"] + 1].replace("\n", " ").split()
+                    # doc[span["plaintext_start_byte"]:span["plaintext_end_byte"] + 1].replace("\n", " ").split()
+                    byte_slice(doc, span["plaintext_start_byte"], span["plaintext_end_byte"]).replace("\n", " ").split()
                 )
                 for span in passage_answer_candidates
             ]
@@ -178,7 +180,8 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
     topic_fn, qrel_fn, fold_fn = \
         os_join(lang_dir, "topic.tsv"), os_join(lang_dir, "qrels.txt"), os_join(lang_dir, "folds.json")
     coll_fn, id2passage_fn = \
-        os_join(lang_dir, "collection.txt"), os_join(lang_dir, "pid2passage.tsv")
+        os_join(lang_dir, "collection", "docs.jsonl"), os_join(lang_dir, "pid2passage.tsv")
+    os.makedirs(os_dir(coll_fn), exist_ok=True)
 
     if all_fn_exists([topic_fn, qrel_fn, fold_fn]): 
         print(f"all benchmark files found for {lang}. skip")
@@ -200,7 +203,8 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
                 for i, passage in enumerate(passages):
                     passage_id = f"{docid}-{i}"
                     assert passage.strip() != "", f"Got empty passage for document {docid}, passage {i}, which have {len(passages)} doc in total"
-                    coll_f.write(document_to_trectxt(passage_id, passage))
+                    # coll_f.write(document_to_trectxt(passage_id, passage))
+                    coll_f.write(json.dumps({"id": passage_id, "contents": passage}) + "\n")
 
 
 def main(args):

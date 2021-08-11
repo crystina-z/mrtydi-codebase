@@ -12,14 +12,17 @@ tydi_dir="${data_output_dir}/TyDi"
 open_retrieval_dir="${data_output_dir}/open-retrieval"
 
 # download and extract the raw dataset
+echo "[0] Downloading and extracting"
 sh 0_download_and_extract.tydi.sh $tydi_dir
 sh 0_download_and_extract.wiki.sh $wiki_dir
 
 # extract jsonl lines containing valid answers
+echo "[1] Categorize Tydi"
 sh 1_categorized_tydi_data.sh $tydi_dir
 
 
 # generate topics.txt, qrels.txt, collections, etc.
+echo "[2] Prepareing Mr. Tydi"
 python 2_prepare_open_retrieval_tydi.py \
 	--tydi_dir "${tydi_dir}/with_answer" \
 	--wiki_dir $wiki_dir \
@@ -27,6 +30,7 @@ python 2_prepare_open_retrieval_tydi.py \
 
 
 # split topics.tsv and qrels.txt into train and dev set
+echo "[3] Split training and dev set"
 python 3_split_train_dev_set.py $open_retrieval_dir
 
 

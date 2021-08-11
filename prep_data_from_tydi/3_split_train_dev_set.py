@@ -9,7 +9,7 @@ import json
 
 os_join = os.path.join
 os_dir = os.path.dirname
-PACKAGE_PATH = os_dir(os_dir(__file__))
+PACKAGE_PATH = os_dir(os_dir(os.path.abspath(__file__)))
 sys.path.append(PACKAGE_PATH)
 
 from utils import LANGS
