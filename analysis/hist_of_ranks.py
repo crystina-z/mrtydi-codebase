@@ -87,6 +87,7 @@ def main(args):
 
     common_args = {"alpha": 0.3}
     bins = [-10] + list(range(0, 110, 10))
+    # bins = [-100] + list(range(0, 1100, 100))
     bm25_n, bm25_patches = plot_hist(bm25_ranks, bins=bins, ax=ax, direction="pos", label="BM25", color="tab:blue", **common_args)
     mdpr_n, mdpr_patches = plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="pos", label=mdpr_label, color="tab:orange", **common_args)
 
@@ -114,7 +115,10 @@ def main(args):
 
     plt.title(lang)
     plt.tight_layout()
-    plt.savefig(f"{plot_dir}/rank-hist/{tag}/rank-hist-{lang}-{tag}.png")
+
+    dir = f"{plot_dir}/rank-hist/{tag}"
+    os.makedirs(dir, exist_ok=True)
+    plt.savefig(f"{dir}/rank-hist-{lang}-{tag}.png")
 
 
 if __name__ == "__main__":
