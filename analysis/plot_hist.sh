@@ -7,8 +7,6 @@ do
     echo $lang
     echo "========================================"
 
-    # for tag in dense hybrid
-    # do
     python hist_of_ranks.py \
 	-l $lang --tag dense \
 	-q ${dataset_dir}/${lang}/qrels.test.txt \
@@ -21,7 +19,6 @@ do
 	-bm25 ${results_dir}/bm25/runs/$lang/bm25.test.k1*.b* \
 	-mdpr ${results_dir}/hybrid/run.hybrid.test.${lang}.trec 
 
-    # done
     echo 
 done
 
