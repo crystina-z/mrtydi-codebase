@@ -30,7 +30,7 @@ do
 	    trec_eval $trec_cmd $qrels_fn $runfile | head -n 5
 	    echo
 
-	    trec_eval $trec_cmd $qrels_fn $runfile  -m ndcg_cut.10 -m recip_rank
+	    trec_eval $trec_cmd $qrels_fn $runfile  -m recip_rank -m recall.1000
 	    echo
    done
 done

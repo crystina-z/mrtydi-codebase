@@ -39,7 +39,6 @@ def plot_hist(data, bins, ax, direction="pos", **kwargs):
         n, patches = _hist(data, bins, ax=ax, **kwargs)
     elif direction == "neg":  # normal plots
         n = _hist(data, bins)
-        # pdb.set_trace()
         assert len(n) == len(bins) - 1
         neg_n = [-value for value in n]
         n, patches = _hist(data, bins, ax=ax, bottom=neg_n, **kwargs)  # plot the histogram at the neg axis
@@ -50,7 +49,6 @@ def plot_ratio(data, x_s, ax, **kwargs):
     sum_data = sum(data) 
     normalized_data = [x / sum_data for x in data]
     return ax.plot(x_s, normalized_data, marker="x", **kwargs)
-    # ax.scatter(x_s, normalized_data, marker="x", **kwargs)
 
 
 def get_rank_list(qrels, runs):
@@ -89,11 +87,11 @@ def main(args):
 
     common_args = {"alpha": 0.3}
     bins = [-10] + list(range(0, 110, 10))
+    # bins = [-100] + list(range(0, 1100, 100))
     bm25_n, bm25_patches = plot_hist(bm25_ranks, bins=bins, ax=ax, direction="pos", label="BM25", color="tab:blue", **common_args)
     mdpr_n, mdpr_patches = plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="pos", label=mdpr_label, color="tab:orange", **common_args)
 
     plt.xticks(bins, ["Unfound"] + bins[1:])
-    # plt.legend()
 
     plt.grid(color="lightgray")
     plt.xlabel("Top-k documents")
@@ -117,7 +115,10 @@ def main(args):
 
     plt.title(lang)
     plt.tight_layout()
-    plt.savefig(f"{plot_dir}/rank-hist/{tag}/rank-hist-{lang}-{tag}.png")
+
+    dir = f"{plot_dir}/rank-hist/{tag}"
+    os.makedirs(dir, exist_ok=True)
+    plt.savefig(f"{dir}/rank-hist-{lang}-{tag}.png")
 
 
 if __name__ == "__main__":

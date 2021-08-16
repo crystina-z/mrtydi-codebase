@@ -25,6 +25,7 @@ method2color = dict(zip(valid_methods, colors))
 
 def barplot():
     i = 0
+    plt.figure()
     xs, langs = [], []
     for lang in scores:
         if lang == "method":
