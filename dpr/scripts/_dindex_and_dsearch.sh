@@ -5,7 +5,8 @@ nvidia-smi
 source /GW/NeuralIR/work/cuda-10.1_env.sh
 
 # todo, rename. this contain the same contents with open-retrieval
-mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/mrtydi"
+# mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/mrtydi"
+mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/v0.6"
 
 results_dir="$hf_model_dir/results"
 index_dir="${results_dir}/faiss_index"
@@ -18,12 +19,10 @@ fi
 
 for lang in bengali telugu finnish swahili thai indonesian arabic korean japanese russian english
 do
-    test_topic_fn="${mrtydi_data_dir}/${lang}/topic.test.tsv"
     coll_json_dir="${mrtydi_data_dir}/${lang}/collection"
 
     # files to output
     lang_index_dir="${index_dir}/${lang}"
-    runfile="${run_dir}/${lang}/trec"
 
     # 1. index
     if [ ! -f "${lang_index_dir}/index" ]; then
@@ -37,15 +36,20 @@ do
     fi
 
     # 2. search
-    if [ ! -f $runfile ]; then
-        python -m pyserini.dsearch \
-            --topics $test_topic_fn \
-            --index $lang_index_dir \
-            --encoder "$hf_model_dir/mdpr-question-encoder" \
-            --output $runfile \
-            --batch-size 36 --threads 12
-    else
-        echo "Found existing ${runfile}, skip."
-    fi
 
+    runfile="${run_dir}/${lang}/dev.trec"
+    for set_name in "dev"  "test"
+    do
+        topic_fn="${mrtydi_data_dir}/${lang}/topic.${set_name}.tsv"
+        if [ ! -f $runfile ]; then
+            python -m pyserini.dsearch \
+                --topics $topic_fn \
+                --index $lang_index_dir \
+                --encoder "$hf_model_dir/mdpr-question-encoder" \
+                --output $runfile \
+                --batch-size 36 --threads 12
+        else
+            echo "Found existing ${runfile}, skip."
+        fi
+    done
 done
