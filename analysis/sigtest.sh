@@ -12,7 +12,7 @@ do
 	for metric in recip_rank recall_1000
 	do
 		echo $metric
-		bm25_tuned=$(ls $results_dir/bm25/runs/${lang}/bm25.test.k1*)
+		bm25_tuned=$(ls $results_dir/bm25/runs-top100/${lang}/bm25.test.k1*)
 		if [[ $mode == "em" ]]; then
 			qrel_fn=${dataset_dir}/../qid2answers/${lang}/test.em.uniq.qrel
 		else
@@ -22,7 +22,7 @@ do
 		echo "Using qrel fn: " $qrel_fn
 		python -m nirtools.ir.sig_test \
 			--runfile1 $bm25_tuned \
-			--runfile2 ${results_dir}/hybrid/runs/$lang/run.hybrid.test.$lang.trec \
+			--runfile2 ${results_dir}/hybrid/runs-top100/$lang/run.hybrid.test.$lang.trec* \
 			--qrels $qrel_fn \
 			--metric $metric
 	done
