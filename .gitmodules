@@ -1,3 +1,6 @@
 [submodule "prep_data_from_tydi/wikIR"]
 	path = prep_data_from_tydi/wikIR
 	url = https://github.com/getalp/wikIR.git
+[submodule "dpr/GC-DPR"]
+	path = dpr/GC-DPR
+	url = https://github.com/luyug/GC-DPR.git
