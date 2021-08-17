@@ -9,7 +9,9 @@ bar_width = 0.8
 distance = 1
 colors = ["tab:blue", "tab:orange", "tab:green", "tab:pink", "tab:purple"]
 
-scores = pd.read_csv("stats/scores.tsv", delimiter="\t", header=0)
+# scores = pd.read_csv("stats/scores.tsv", delimiter="\t", header=0)
+scores = pd.read_csv("stats/scores-top100.tsv", delimiter="\t", header=0)
+# scores = pd.read_csv("stats/scores-em.tsv", delimiter="\t", header=0)
 n_rows = len(scores)
 
 
@@ -82,7 +84,7 @@ def barplot():
     plt.xticks(xs, langs)
     plt.ylabel("Relative MRR comparing to tuned BM25")
     plt.tight_layout()
-    plt.savefig(f"{plot_dir}/relative_score_bars.png")
+    plt.savefig(f"{plot_dir}/relative_score_bars-top100.png")
 
 
 def scatter():
@@ -117,7 +119,7 @@ def scatter():
     plt.xlabel("Relative MRR comparing to tuned BM25 (mDPR)")
     plt.ylabel("Relative MRR comparing to tuned BM25 (hybrid)")
     plt.tight_layout()
-    plt.savefig(f"{plot_dir}/relative_score_scatter.png")
+    plt.savefig(f"{plot_dir}/relative_score_scatter-top100.png")
 
 
 if __name__ == "__main__":
