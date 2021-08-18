@@ -65,7 +65,7 @@ def get_rank_list(qrels, runs):
         cur_ranks = [i for i, (docid, score) in enumerate(
             sorted(doc2score.items(), key=lambda kv: kv[1], reverse=True)
         ) if docid in pos_docids]
-        cur_rank = -1 if len(cur_ranks) == 0 else min(cur_ranks)
+        cur_rank = 101 if len(cur_ranks) == 0 else min(cur_ranks)
         ranks.append(cur_rank)
     return ranks
 
@@ -73,6 +73,7 @@ def get_rank_list(qrels, runs):
 def main(args):
     tag = args.tag
     mdpr_label = "mDPR" if tag == "dense" else "Hybrid"
+    mdpr_color = "tab:orange" if tag == "dense" else "salmon"
 
     qrels = load_qrels(args.qrels_file)
     bm25 = load_runs(args.bm25_runfile)
@@ -84,29 +85,31 @@ def main(args):
     fig = plt.figure()
     ax = plt.gca()
 
-
-    common_args = {"alpha": 0.3}
-    bins = [-10] + list(range(0, 110, 10))
+    common_args = {"alpha": 0.4}
+    # bins = [-10] + list(range(0, 110, 10))
+    bins = list(range(0, 110, 10)) + [110]
     # bins = [-100] + list(range(0, 1100, 100))
     bm25_n, bm25_patches = plot_hist(bm25_ranks, bins=bins, ax=ax, direction="pos", label="BM25", color="tab:blue", **common_args)
-    mdpr_n, mdpr_patches = plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="pos", label=mdpr_label, color="tab:orange", **common_args)
+    mdpr_n, mdpr_patches = plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="pos", label=mdpr_label, color=mdpr_color, **common_args)
 
-    plt.xticks(bins, ["Unfound"] + bins[1:])
+    # plt.xticks(bins, ["Not Found"] + bins[1:])
+    plt.xticks(bins[:-1] + [bins[-1] + 3], bins[:-1] + ["Not Found"])
 
     plt.grid(color="lightgray")
     plt.xlabel("Top-k documents")
-    plt.ylabel("No. of Q with relevant document")
+    plt.ylabel("No. of Q with relevant document in top-k")
     lang = args.lang.capitalize()
 
     # plot the right axis
     ax_right = ax.twinx()
     x_s = [
-        (bins[i] + bins[i + 1]) / 2 for i in range(1, len(bins) - 1)
+        # (bins[i] + bins[i + 1]) / 2 for i in range(1, len(bins) - 1)
+        (bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 2)
     ]
     common_args = {"alpha": 0.9}
-    bm25_ratio_patches = plot_ratio(bm25_n[1:], x_s, ax=ax_right, color="tab:blue", label="BM25 (ratio)", **common_args)
-    mdpr_ratio_patches = plot_ratio(mdpr_n[1:], x_s, ax=ax_right, color="tab:orange", label=f"{mdpr_label} (ratio)", **common_args)
-    ax_right.set_ylabel("% of Queries among all queries with D_rel found")
+    bm25_ratio_patches = plot_ratio(bm25_n[:-1], x_s, ax=ax_right, color="tab:blue", label="BM25 (ratio)", **common_args)
+    mdpr_ratio_patches = plot_ratio(mdpr_n[:-1], x_s, ax=ax_right, color=mdpr_color, label=f"{mdpr_label} (ratio)", **common_args)
+    ax_right.set_ylabel("Distribution of Q with relevant document in top-100")
 
     # combined all labels
     all_patches = bm25_patches.patches + mdpr_patches.patches + bm25_ratio_patches + mdpr_ratio_patches
