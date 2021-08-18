@@ -78,12 +78,13 @@ def barplot():
                     color=face_color,
                     edgecolor=edge_color,
                 )
-            plt.bar_label(rects, padding=1)
+            labels = ["%.2f" % round(rel_score, 2)]
+            plt.bar_label(rects, labels=labels, padding=1)
 
         i += bar_width * n_methods + distance
 
     plt.plot(
-        [xs[0] - bar_width * n_methods, xs[-1] + bar_width],
+        [xs[0] - bar_width * n_methods, xs[-1] + bar_width * 2],
         [1, 1],
         label="BM25 (tuned)",
         linestyle="--",
