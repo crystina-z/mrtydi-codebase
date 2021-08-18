@@ -93,7 +93,7 @@ def main(args):
     mdpr_n, mdpr_patches = plot_hist(mdpr_ranks, bins=bins, ax=ax, direction="pos", label=mdpr_label, color=mdpr_color, **common_args)
 
     # plt.xticks(bins, ["Not Found"] + bins[1:])
-    plt.xticks(bins[:-1] + [bins[-1] + 3], bins[:-1] + ["Not Found"])
+    plt.xticks(bins[:-1] + [bins[-1], bins[-1]+5], bins[:-1] + ["", "Not Found"])
 
     plt.grid(color="lightgray")
     plt.xlabel("Top-k documents")
@@ -106,15 +106,16 @@ def main(args):
         # (bins[i] + bins[i + 1]) / 2 for i in range(1, len(bins) - 1)
         (bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 2)
     ]
-    common_args = {"alpha": 0.9}
-    bm25_ratio_patches = plot_ratio(bm25_n[:-1], x_s, ax=ax_right, color="tab:blue", label="BM25 (ratio)", **common_args)
-    mdpr_ratio_patches = plot_ratio(mdpr_n[:-1], x_s, ax=ax_right, color=mdpr_color, label=f"{mdpr_label} (ratio)", **common_args)
+    common_args = {"alpha": 1}
+    bm25_ratio_patches = plot_ratio(bm25_n[:-1], x_s, ax=ax_right, color="tab:blue", label="BM25 (normalized)", **common_args)
+    mdpr_ratio_patches = plot_ratio(mdpr_n[:-1], x_s, ax=ax_right, color=mdpr_color, label=f"{mdpr_label} (normalized)", **common_args)
     ax_right.set_ylabel("Distribution of Q with relevant document in top-100")
+    ax_right.set_ylim(0, 1)
 
     # combined all labels
     all_patches = bm25_patches.patches + mdpr_patches.patches + bm25_ratio_patches + mdpr_ratio_patches
     labels = [l.get_label() for l in all_patches]
-    ax_right.legend(all_patches, labels, loc=0)
+    ax_right.legend(all_patches, labels, loc=9, ncol=2) # upper center
 
     plt.title(lang)
     plt.tight_layout()
