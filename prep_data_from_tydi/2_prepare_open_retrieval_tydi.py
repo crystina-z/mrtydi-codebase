@@ -150,7 +150,7 @@ def prepare_dataset_from_tydi(lang, tydi_dir, wiki_psg_dict, output_dir):
             # add to folds and qrels
             folds[set_name].add(qid)
             for rel_id in rel_indexes:
-                passage_id = f"{docid}-{rel_id}"
+                passage_id = f"{docid}#{rel_id}"
                 qrels[qid][passage_id] = 1 
 
             # overwrite our own wiki psg with the official ones 
