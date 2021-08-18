@@ -1,39 +1,80 @@
 # Mr. TyDi
 
-The processed dataset could be downloaded [here](https://uofwaterloo-my.sharepoint.com/:f:/g/personal/x978zhan_uwaterloo_ca/Egpbu0I7gIRMlLyIOlI3dyQB02_S5s5iLDIMW3n0jTX_Qg?e=lvp3Ns).
-Each `.zip` contains directories: `arabic   english  indonesian  korean   swahili  thai bengali  finnish  japanese    russian  telugu`.
+[**Download**](#download) |
+[**Baselines and Evaluation**](#baselines-and-evaluation) | 
+[**Paper**]()
 
-## Prepare open-retrieval data from the TyDi primary task data and Wikipedia dump
-Heads-up: the data downloading and processing could take over 20 hours, where the English Wikipedia is the most time-consuming one.
+## Introduction
+Mr. TyDi is a multi-lingual benchmark dataset built on [TyDi](https://arxiv.org/abs/2003.05002), covering 11 typologically diverse languages.
+It is designed for mono-lingual retrieval, specifically to evaluate ranking with learned dense representations.
+
+## Download 
+
+1. Dataset (topic, qrels, folds, collections)
+
+      [Arabic]()
+    | [Bengali]() 
+    | [English]() 
+    | [Finnish]()
+    | [Indonesian]()
+    | [Japanese]() 
+    | [Korean]()
+    | [Russian]() 
+    | [Kiswahili]()
+    | [Telugu]()
+    | [Thai]()
+
+2. Pre-build sparse index (for BM25)
+
+      [Arabic]()
+    | [Bengali]() 
+    | [English]() 
+    | [Finnish]()
+    | [Indonesian]()
+    | [Japanese]() 
+    | [Korean]()
+    | [Russian]() 
+    | [Kiswahili]()
+    | [Telugu]()
+    | [Thai]()
+
+3. Pre-build dense index (for mDPR)
+
+      [Arabic]()
+    | [Bengali]() 
+    | [English]() 
+    | [Finnish]()
+    | [Indonesian]()
+    | [Japanese]() 
+    | [Korean]()
+    | [Russian]() 
+    | [Kiswahili]()
+    | [Telugu]()
+    | [Thai]()
+
+4. Checkpoints
+
+    [mDPR (trained on NQ)]()
+
+
+## Baselines and Evaluation
+1. BM25  (pointer to pyserini)
+1. mDPR (pointer to pyserini)
+
+
+## Citation
+If you find our paper useful or use the dataset in your work, please cite our paper and the TyDi paper:
 ```
-data_dir=/path/to/data
-cd prep_data_from_tydi && sh prepare_dataset.sh $data_dir && cd ..
+```
+```
+@article{tydiqa,
+title   = {{TyDi QA}: A Benchmark for Information-Seeking Question Answering in Typologically Diverse Languages},
+author  = {Jonathan H. Clark and Eunsol Choi and Michael Collins and Dan Garrette and Tom Kwiatkowski and Vitaly Nikolaev and Jennimaria Palomaki}
+year    = {2020},
+journal = {Transactions of the Association for Computational Linguistics}
+}
 ```
 
-## To prepare Anserini Index and run BM25
-1. Set up Anserini and `trec_eval`, and add them to enviroment variables.
-Require the [latest commit](https://github.com/castorini/anserini/commit/a72b65268f54a4cfe63a36918f4ab7ca09b2e7e8) of Anserini.
-```
-# copied from anserini repo
-git clone https://github.com/castorini/anserini.git --recurse-submodules
-cd anserini && mvn clean package appassembler:assemble
-cd tools/eval && tar xvfz trec_eval.9.0.4.tar.gz && cd trec_eval.9.0.4 && make && cd ../../..
-cd tools/eval/ndeval && make && cd ../../..
-cd ..
-
-export ANSERINI_DIR="$pwd/anserini"
-trec_eval_path="$ANSERINI_DIR/tools/eval/trec_eval.9.0.4"
-export PATH=${trec_eval_path}:$PATH
-```
-
-2. Then we are ready to run Index, Searching and Evaluation
-```
-open_retrieval_dataset_dir="$data_dir/open-retrieval"
-
-# index and search
-sh bm25/run_all.sh $open_retrieval_dataset_dir 
-
-# evaluation
-sh bm25/run_all.sh $open_retrieval_dataset_dir eval     # trec_eval
-sh bm25/run_all.sh $open_retrieval_dataset_dir eval -J  # trec_eval -J      
-```
+## Contact us
+If you have any question or suggestions regarding the dataset, code or publication, 
+please contact Xinyu Zhang (x978zhan[at]uwaterloo.ca)
