@@ -5,6 +5,8 @@ from matplotlib import colors as mat_colors
 import pandas as pd
 
 
+figsize=[8, 6]
+boxsize=[4.5, 4.5]
 bar_width = 0.8
 distance = 1
 colors = ["tab:blue", "tab:orange", "tab:green", "tab:pink", "tab:purple"]
@@ -14,6 +16,17 @@ scores = pd.read_csv("stats/scores-top100.tsv", delimiter="\t", header=0)
 # scores = pd.read_csv("stats/scores-em.tsv", delimiter="\t", header=0)
 n_rows = len(scores)
 
+
+def set_size(w, h, ax=None):
+    """ w, h: width, height in inches """
+    if not ax: ax=plt.gca()
+    l = ax.figure.subplotpars.left
+    r = ax.figure.subplotpars.right
+    t = ax.figure.subplotpars.top
+    b = ax.figure.subplotpars.bottom
+    figw = float(w) / (r - l)
+    figh = float(h) / (t - b)
+    ax.figure.set_size_inches(figw, figh)
 
 def filter_fn(df):
     return (df != "BM25") & (df != "BM25-tuned")
@@ -27,7 +40,7 @@ method2color = dict(zip(valid_methods, colors))
 
 def barplot():
     i = 0
-    plt.figure()
+    plt.figure(figsize=figsize)
     xs, langs = [], []
     for lang in scores:
         if lang == "method":
@@ -82,8 +95,9 @@ def barplot():
 
     plt.legend()
     plt.xticks(xs, langs)
-    plt.ylabel("Relative MRR comparing to tuned BM25")
-    plt.tight_layout()
+    plt.ylabel("MRR normalized to BM25 (tuned)")
+    set_size(*boxsize)
+    # plt.tight_layout()
     plt.savefig(f"{plot_dir}/relative_score_bars-top100.png")
 
 
@@ -116,12 +130,13 @@ def scatter():
     plot_dir = os.path.join(file_dir, "plots")
 
     # plt.legend()
-    plt.xlabel("Relative MRR comparing to tuned BM25 (mDPR)")
-    plt.ylabel("Relative MRR comparing to tuned BM25 (hybrid)")
-    plt.tight_layout()
+    plt.xlabel("MRR of mDPR normalized to BM25 (tuned)")
+    plt.ylabel("MRR of sparse-dense hybrid normalized to BM25 (tuned)")
+    # plt.tight_layout()
+    set_size(*boxsize)
     plt.savefig(f"{plot_dir}/relative_score_scatter-top100.png")
 
 
 if __name__ == "__main__":
-    # barplot()
-    scatter()
+    barplot()
+    # scatter()
