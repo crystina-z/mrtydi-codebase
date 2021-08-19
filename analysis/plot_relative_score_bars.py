@@ -1,9 +1,9 @@
 import os
-import matplotlib.pyplot as plt
-from matplotlib import colors as mat_colors
-
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
+from matplotlib import colors as mat_colors
 
 figsize=[8, 6]
 boxsize=[4.5, 4.5]
@@ -123,9 +123,45 @@ def scatter():
     lang_rel_scores = sorted(
         lang2rel_scores.items(), key=lambda kv: (kv[1]["mDPR"], kv[1]["hybrid"])
     )
+
+    x_s, y_s = [], []
     for i, (lang, rel_scores) in enumerate(lang_rel_scores):
         plt.scatter(rel_scores["mDPR"], rel_scores["hybrid"], s=5, color="tab:blue")
         plt.text(s=lang, x=rel_scores["mDPR"] * 1.015, y=rel_scores["hybrid"]) 
+        x_s.append(rel_scores["mDPR"])
+        y_s.append(rel_scores["hybrid"])
+        # print(rel_scores)
+    
+    # linear regression
+    x_s, y_s = np.array(x_s), np.array(y_s)
+    m, b = np.polyfit(x_s, y_s, 1)
+
+    # plot linear regression
+    x_s_to_plot = np.concatenate(([0.0], x_s, [x_s.max() + 0.1]))
+    lr_y_s_to_plot = m * x_s_to_plot + b
+    plt.plot(
+        x_s_to_plot, lr_y_s_to_plot, 
+        color="tab:grey",
+        linestyle="--", 
+        alpha=0.5,
+        # label="Linear Regression"
+    )
+
+    # R^2
+    # from sklearn.metrics import r2_score
+    # R_square = r2_score(x_s, y_s)
+    y_mean = y_s.mean()
+    lr_y_s = m * x_s + b  # pred y using linear regression
+    diff_lr = ((lr_y_s - y_s) ** 2).sum()
+    diff_mean = ((y_mean - y_s) ** 2).sum()
+    R_square = (diff_mean - diff_lr) / diff_mean
+    # print("R^2: ", R_square)
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    plt.text(
+        s=f"$R^2$ = %.2f" % R_square, 
+        x=0.9, y=0.9,
+        bbox=props, 
+    ) 
 
     file_dir = os.path.dirname(__file__)
     plot_dir = os.path.join(file_dir, "plots")
@@ -139,5 +175,6 @@ def scatter():
 
 
 if __name__ == "__main__":
-    barplot()
-    # scatter()
+    # barplot()
+    scatter()
+    # pass
