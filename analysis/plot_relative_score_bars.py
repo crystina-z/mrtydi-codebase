@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 
 from matplotlib import colors as mat_colors
@@ -99,7 +100,8 @@ def barplot():
     plt.ylabel("MRR normalized to BM25 (tuned)")
     set_size(*boxsize)
     # plt.tight_layout()
-    plt.savefig(f"{plot_dir}/relative_score_bars-top100.png")
+    # plt.savefig(f"{plot_dir}/relative_score_bars-top100.png")
+    plt.savefig(f"{plot_dir}/relative_score_bars-top100.pdf")
 
 
 def scatter():
@@ -171,10 +173,11 @@ def scatter():
     plt.ylabel("MRR of sparse-dense hybrid normalized to BM25 (tuned)")
     # plt.tight_layout()
     set_size(*boxsize)
-    plt.savefig(f"{plot_dir}/relative_score_scatter-top100.png")
+    # plt.savefig(f"{plot_dir}/relative_score_scatter-top100.png")
+    plt.savefig(f"{plot_dir}/relative_score_scatter-top100.pdf")
 
 
 if __name__ == "__main__":
-    # barplot()
-    scatter()
+    barplot()
+    # scatter()
     # pass
