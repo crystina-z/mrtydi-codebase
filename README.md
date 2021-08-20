@@ -1,4 +1,4 @@
-# Mr. TyDi
+# Mr. TyDi <img src="https://cdn.emojidex.com/emoji/px64/bowtie(github).png" width="40" height="40">
 
 [**Download**](#download) |
 [**Baselines and Evaluation**](#baselines-and-evaluation) | 
