@@ -1,65 +1,74 @@
-# Mr. TyDi <img src="https://cdn.emojidex.com/emoji/px64/bowtie(github).png" width="40" height="40">
+<p align="center">
+    <br>
+      <img src="https://user-images.githubusercontent.com/31640436/130191059-749fbfa4-26b2-4993-b467-ed913741112b.png" width="25%">
+    <br>
+<p>
 
-[**Download**](#download) |
-[**Baselines and Evaluation**](#baselines-and-evaluation) | 
-[**Paper**](https://arxiv.org/abs/2108.08787)
+<h4 align="center">
+    <p>
+        <a href="#download">Download</a> |
+        <a href="#baselines-and-evaluation">Baselines and Evaluation</a> |
+        <a href="https://arxiv.org/abs/2108.08787">Paper</a>
+    <p>
+</h4>
 
+ 
 ## Introduction
-Mr. TyDi is a multi-lingual benchmark dataset built on [TyDi](https://arxiv.org/abs/2003.05002), covering 11 typologically diverse languages.
+Mr. TyDi is a multi-lingual benchmark dataset built on [TyDi](https://arxiv.org/abs/2003.05002), covering eleven typologically diverse languages.
 It is designed for mono-lingual retrieval, specifically to evaluate ranking with learned dense representations.
 
 ## Download 
 
-1. Dataset (topic, qrels, folds, collections)
+#### 1. Dataset (topic, qrels, folds, collections)
 
-      [Arabic](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-arabic.tar.gz)
-    | [Bengali](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-bengali.tar.gz)
-    | [English](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-english.tar.gz)
-    | [Finnish](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-finnish.tar.gz)
-    | [Indonesian](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-indonesian.tar.gz)
-    | [Japanese](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-japanese.tar.gz)
-    | [Korean](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-korean.tar.gz)
-    | [Russian](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-russian.tar.gz)
-    | [Swahili](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-swahili.tar.gz)
-    | [Telugu](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-telugu.tar.gz)
-    | [Thai](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-thai.tar.gz)
+&nbsp;&nbsp;&nbsp;&nbsp;[Arabic](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-arabic.tar.gz)
+| [Bengali](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-bengali.tar.gz)
+| [English](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-english.tar.gz)
+| [Finnish](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-finnish.tar.gz)
+| [Indonesian](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-indonesian.tar.gz)
+| [Japanese](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-japanese.tar.gz)
+| [Korean](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-korean.tar.gz)
+| [Russian](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-russian.tar.gz)
+| [Swahili](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-swahili.tar.gz)
+| [Telugu](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-telugu.tar.gz)
+| [Thai](https://git.uwaterloo.ca/jimmylin/mr.tydi/-/raw/master/data/mrtydi-v1.0-thai.tar.gz)
 
-2. Pre-build sparse index (for BM25)
+#### 2. Pre-build sparse index (for BM25)
 
-      [Arabic]()
-    | [Bengali]() 
-    | [English]() 
-    | [Finnish]()
-    | [Indonesian]()
-    | [Japanese]() 
-    | [Korean]()
-    | [Russian]() 
-    | [Kiswahili]()
-    | [Telugu]()
-    | [Thai]()
+&nbsp;&nbsp;&nbsp;&nbsp;[Arabic](https://vault.cs.uwaterloo.ca/s/kKed9pzMGPdiHkm/download)
+| [Bengali](https://vault.cs.uwaterloo.ca/s/QWsjtMgprLBx6gd/download)
+| [English](https://vault.cs.uwaterloo.ca/s/RG3wTom3TBnYbyx/download)
+| [Finnish](https://vault.cs.uwaterloo.ca/s/FwCbws5okxsjH5T/download)
+| [Indonesian](https://vault.cs.uwaterloo.ca/s/FJLKPZwGKn2wCD5/download)
+| [Japanese](https://vault.cs.uwaterloo.ca/s/mYj9g7pJZqGbZXM/download)
+| [Korean](https://vault.cs.uwaterloo.ca/s/zKAFt5q8wLjokWq/download)
+| [Russian](https://vault.cs.uwaterloo.ca/s/TBMEn2coT9Xoyk8/download)
+| [Kiswahili](https://vault.cs.uwaterloo.ca/s/rpX6TbqrE73yoLp/download)
+| [Telugu](https://vault.cs.uwaterloo.ca/s/eWN7ZYpfknRHZEM/download)
+| [Thai](https://vault.cs.uwaterloo.ca/s/HnF36dN86SdZKx6/download)
 
-3. Pre-build dense index (for mDPR)
+#### 3. Pre-build dense index (for mDPR)
 
-      [Arabic]()
-    | [Bengali]() 
-    | [English]() 
-    | [Finnish]()
-    | [Indonesian]()
-    | [Japanese]() 
-    | [Korean]()
-    | [Russian]() 
-    | [Kiswahili]()
-    | [Telugu]()
-    | [Thai]()
+&nbsp;&nbsp;&nbsp;&nbsp; [Arabic]()
+| [Bengali]() 
+| [English]() 
+| [Finnish]()
+| [Indonesian]()
+| [Japanese]() 
+| [Korean]()
+| [Russian]() 
+| [Kiswahili]()
+| [Telugu]()
+| [Thai]()
 
-4. Checkpoints
-
-    [mDPR (trained on NQ)]()
+#### 4. Checkpoints
+- [castorini/mdpr-question-nq]() 
+- [castorini/mdpr-context-nq]()
 
 
 ## Baselines and Evaluation
-1. BM25  (pointer to pyserini)
-1. mDPR (pointer to pyserini)
+#### 1. BM25
+#### 2. mDPR
 
 
 ## Citation
@@ -70,7 +79,7 @@ If you find our paper useful or use the dataset in your work, please cite our pa
       author={Xinyu Zhang and Xueguang Ma and Peng Shi and Jimmy Lin},
       year={2021},
       journal={arXiv:2108.08787},
-}}
+}
 ```
 ```
 @article{tydiqa,
