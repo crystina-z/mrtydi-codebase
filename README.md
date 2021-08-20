@@ -1,15 +1,15 @@
 <p align="center">
     <br>
-      <img src="https://user-images.githubusercontent.com/31640436/130191059-749fbfa4-26b2-4993-b467-ed913741112b.png" width="25%">
+      <img src="https://user-images.githubusercontent.com/31640436/130242523-edc285f2-beda-4b10-ba2b-6ca5b5d9b6a8.png" width="27%">
     <br>
-<p>
+</p>
 
 <h4 align="center">
     <p>
         <a href="#download">Download</a> |
         <a href="#baselines-and-evaluation">Baselines and Evaluation</a> |
         <a href="https://arxiv.org/abs/2108.08787">Paper</a>
-    <p>
+    </p>
 </h4>
 
  
