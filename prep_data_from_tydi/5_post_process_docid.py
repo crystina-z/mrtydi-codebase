@@ -80,10 +80,10 @@ def change_qrel(ori_file, out_file):
     os.makedirs(os_dir(out_file), exist_ok=True)
     with open(ori_file) as f, open(out_file, "w") as fout: 
         for line in f:
-            line = line.split()  # qid, Q0, docid, label\n
+            line = line.strip().split()  # qid, Q0, docid, label\n
             line[2] = update_id(line[2])
             assert "#" in line[2]
-            fout.write(" ".join(line))
+            fout.write(" ".join(line) + "\n")
  
 
 def main(args):
