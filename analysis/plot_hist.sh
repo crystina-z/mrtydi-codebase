@@ -1,5 +1,5 @@
-dataset_dir="/store/scratch/x978zhan/mr-tydi/dataset"
-results_dir="/store/scratch/x978zhan/mr-tydi/results"
+dataset_dir="/store/scratch/x978zhan/mr-tydi/v0.6/dataset"
+results_dir="/store/scratch/x978zhan/mr-tydi/v0.6/results"
 
 for lang in arabic  bengali  english  finnish  indonesian  japanese  korean  russian  swahili  telugu  thai
 do

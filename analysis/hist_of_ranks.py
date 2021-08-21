@@ -120,9 +120,10 @@ def main(args):
     plt.title(lang)
     plt.tight_layout()
 
-    dir = f"{plot_dir}/rank-hist/{tag}"
+    dir = f"{plot_dir}/rank-hist-pdf/{tag}"
     os.makedirs(dir, exist_ok=True)
-    plt.savefig(f"{dir}/rank-hist-{lang}-{tag}.png")
+    # plt.savefig(f"{dir}/rank-hist-{lang}-{tag}.png")
+    plt.savefig(f"{dir}/rank-hist-{lang}-{tag}.pdf")
 
 
 if __name__ == "__main__":
