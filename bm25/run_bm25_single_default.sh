@@ -80,7 +80,7 @@ fi
 
 
 # search (train and dev) 
-hits=1000
+hits=100
 topicreader="TsvString"
 
 for set_name in "train" "dev" "test"
