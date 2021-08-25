@@ -4,9 +4,11 @@ This file does not run by itself, need the $hf_model_line provide by scripts/3_d
 nvidia-smi
 source /GW/NeuralIR/work/cuda-10.1_env.sh
 
+version="v1.1"
 # todo, rename. this contain the same contents with open-retrieval
 # mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/mrtydi"
-mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/v0.6"
+# mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/v0.6"
+mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/${version}"
 
 results_dir="$hf_model_dir/results"
 index_dir="${results_dir}/faiss_index"
@@ -19,7 +21,8 @@ fi
 
 for lang in bengali telugu finnish swahili thai indonesian arabic korean japanese russian english
 do
-    coll_json_dir="${mrtydi_data_dir}/${lang}/collection"
+    lang_data_dir="${mrtydi_data_dir}/mrtydi-${version}-${lang}"
+    coll_json_dir="${lang_data_dir}/collection"
 
     # files to output
     lang_index_dir="${index_dir}/${lang}"
@@ -37,10 +40,12 @@ do
 
     # 2. search
 
-    runfile="${run_dir}/${lang}/dev.trec"
-    for set_name in "dev"  "test"
+    for set_name in "dev" "test"
     do
-        topic_fn="${mrtydi_data_dir}/${lang}/topic.${set_name}.tsv"
+        # topic_fn="${mrtydi_data_dir}/${lang}/topic.${set_name}.tsv"
+        topic_fn="${lang_data_dir}/topic.${set_name}.tsv"
+        runfile="${run_dir}/${lang}/${set_name}.trec"
+
         if [ ! -f $runfile ]; then
             python -m pyserini.dsearch \
                 --topics $topic_fn \

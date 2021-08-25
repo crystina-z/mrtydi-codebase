@@ -1,4 +1,4 @@
-mr_tydi_dir=""
+mr_tydi_dir=$1
 output_dir="$mr_tydi_dir/../dpr_inputs"
 mkdir -p $output_dir
 
