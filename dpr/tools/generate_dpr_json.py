@@ -49,10 +49,11 @@ def main():
 		print("Usage: python tools/generate_dpr_json.py /path/to/open_retrieval_dir /path/to/output lang")
 		exit()
 
+	version = "v1.1"
 	open_retrieval_dir = sys.argv[1]
 	output_dir = sys.argv[2]
 	lang = sys.argv[3]
-	lang_dir = os_join(open_retrieval_dir, lang) 
+	lang_dir = os_join(open_retrieval_dir, f"mrtydi-{version}-{lang}") 
 	dpr_dir = os_join(output_dir, lang)
 
 	if all([os.path.exists(os_join(dpr_dir, f"{set_name}.json")) for set_name in ["train", "dev"]]):
@@ -63,7 +64,7 @@ def main():
 	folds_fn = os_join(lang_dir, "folds.json")
 	qrels_fn = os_join(lang_dir, "qrels.txt")
 	coll_fn = os_join(lang_dir, "collection", "docs.jsonl")
-	runfile_dir = os_join(lang_dir, "runfiles")
+	runfile_dir = os_join(open_retrieval_dir, os.pardir, "bm25-runfiles", lang)
 
 	assert all(map(os.path.exists, [topic_fn, folds_fn, qrels_fn, coll_fn]))
 	folds = json.load(open(folds_fn))
@@ -72,7 +73,6 @@ def main():
 	id2doc = {id: doc for id, doc in load_collection_jsonl(coll_fn)}
 
 	# dpr_dir = os_join(lang_dir, "dpr_inputs")
-
 	for set_name in ["train", "dev"]:
 		output_json = os_join(dpr_dir, f"{set_name}.json")
 		if os.path.exists(output_json):
@@ -91,7 +91,8 @@ def main():
 				continue
 		
 			if qid not in train_runs:
-				print(f"Warning: {qid} could not be found in runfile")
+				# print(f"Warning: {qid} could not be found in runfile")
+				n_unfound += 1
 				continue
 
 			pos_docids = [docid for docid in train_runs[qid] if qrels[qid].get(docid, 0) > 0]
@@ -106,9 +107,9 @@ def main():
 	
 		json.dump(training_data, open(output_json, "w"))
 		print(
-			"Finished.",
-			f"{len(training_data)} queries have been stored in {output_json}.",
-			f"{n_unfound} queries do not have positive doc found in {train_runfile}"
+			"Finished.\n",
+			f"{len(training_data)} queries have been stored in {output_json}.\n",
+			f"{n_unfound} queries are not found or do not have positive doc found in {train_runfile}"
 		)
 
 
