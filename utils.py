@@ -151,10 +151,18 @@ def load_collection_trec(coll_fn):
 
 
 def load_collection_jsonl(coll_fn):
-    with open(coll_fn) as f:
+    open_handle = gzip.open if coll_fn.endswith(".gz") else open
+    with open_handle(coll_fn) as f:
         for line in f:
             line = json.loads(line)
             yield line["id"], line["contents"]
+
+
+def load_id2title(fn):
+    with open(fn) as f:
+        for line in f:
+            pid, passage = line.strip().split("\t")
+            yield pid, passage
 
 
 def run_command(cmd):
