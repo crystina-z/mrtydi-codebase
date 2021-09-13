@@ -43,7 +43,7 @@ def main(args):
                     title = ""
 
                 f.write(
-                    json.dumps({"id": pid, "contents": f"{title}. {passage}"}, ensure_ascii=False) + "\n"
+                    json.dumps({"id": pid, "contents": f"{title}\n\n{passage}"}, ensure_ascii=False) + "\n"
                 )
         print(f"finished, {n_unfound_title} / {n_total} passage does not have found title.")
  

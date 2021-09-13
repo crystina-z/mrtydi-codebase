@@ -1,3 +1,4 @@
+set -e 
 open_retrieval_dir=$1
 mode=$2
 cmd=$3

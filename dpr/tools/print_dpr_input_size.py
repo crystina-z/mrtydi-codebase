@@ -4,6 +4,10 @@ import sys
 import json
 import glob
 
+<<<<<<< HEAD
+=======
+import numpy as np
+>>>>>>> origin/master
 from tqdm import tqdm
 
 os_join = os.path.join
@@ -15,7 +19,7 @@ from utils import LANGS, load_runs, load_qrels, load_topic_tsv, load_collection_
 
 
 def main():
-	dpr_input_dir = sys.argv[1]
+    dpr_input_dir = sys.argv[1]
     # lang = sys.argv[2]
     print(f"{'lang':20}{'No. Q':20}{'No. Pos (avg)':20}{'No. Neg (avg)':20}")
     for lang in LANGS:

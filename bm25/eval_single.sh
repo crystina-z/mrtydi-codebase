@@ -2,12 +2,9 @@ open_retrieval_dir=$1
 lang=$2
 trec_cmd=$3  # e.g. -J, -c, etc
 
-root_dir="${open_retrieval_dir}/${lang}"
-runfile_dir="${root_dir}/runfiles"
-
-# search (train and dev) 
-hits=1000
-topicreader="TsvString"
+root_dir="${open_retrieval_dir}/*${lang}"
+runfile_dir="${open_retrieval_dir}/../bm25-runfiles/${lang}"
+# runfile_dir="${root_dir}/runfiles"
 
 # for set_name in "train" "test"
 for set_name in "test"
@@ -30,7 +27,8 @@ do
 	    trec_eval $trec_cmd $qrels_fn $runfile | head -n 5
 	    echo
 
-	    trec_eval $trec_cmd $qrels_fn $runfile  -m recip_rank -m recall.1000
+	    # trec_eval $trec_cmd $qrels_fn $runfile  -m recip_rank -m recall.1000
+	    trec_eval -c $trec_cmd $qrels_fn $runfile  -m recip_rank -m recall.100,1000
 	    echo
    done
 done

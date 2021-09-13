@@ -21,7 +21,8 @@ if len(sys.argv) != 3:
 
 open_retrieval_dir = sys.argv[1]
 lang = sys.argv[2]
-root_dir = f"{open_retrieval_dir}/{lang}"
+# root_dir = f"{open_retrieval_dir}/{lang}"
+root_dir = f"{open_retrieval_dir}/mrtydi-v1.1-{lang}"
 output_dir = os_dir(os.path.abspath(open_retrieval_dir))
 
 if not os.path.exists(root_dir):
@@ -33,7 +34,8 @@ lang_abbr = lang2abbr[lang]
 
 # output directories
 collection_dir = f"{root_dir}/collection"
-collection_file = f"{root_dir}/collection/docs.jsonl"
+collection_file = f"{collection_dir}/docs.jsonl.gz"
+print(collection_file)
 
 # index_path=f"{root_dir}/index/lucene-index.pos+docvectors+raw"
 # runfile_dir=f"{root_dir}/runfiles"
@@ -47,10 +49,6 @@ for dir in [collection_dir, os.path.dirname(index_path), runfile_dir]:
 
 
 # prepare collection
-'''
-if not os.path.exists(collection_file):
-   shutil.copyfile(f"{root_dir}/collection.txt", collection_file)
-'''
 assert os.path.exists(collection_file), f"Cannot find collection file {collection_file}"
 
 def search_fn(
