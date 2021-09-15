@@ -14,7 +14,6 @@
 # limitations under the License.
 
 # Lint as: python3
-'''SciFact Dataset (Retrieval Only)'''
 
 import json
 
@@ -31,16 +30,16 @@ _CITATION = '''
 '''
 
 languages = [
-    'arabic', 
-    'bengali', 
+    'arabic',
+    'bengali',
     'english',
-    'indonesian', 
-    'finnish', 
-    'korean', 
-    'russian', 
-    'swahili', 
-    'telugu', 
-    'thai', 
+    'indonesian',
+    'finnish',
+    'korean',
+    'russian',
+    'swahili',
+    'telugu',
+    'thai',
     'japanese',
 ]
 
@@ -57,21 +56,12 @@ _DATASET_URLS = {
     } for lang in languages
 }
 
-@dataclass
-class MrTydiConfig(datasets.BuilderConfig):
-    lang: str = None
-    # query_or_corpus: str = None 
-
 
 class MrTyDi(datasets.GeneratorBasedBuilder):
-    VERSION = datasets.Version('1.1.0')
-
-    BUILDER_CONFIG_CLASS = MrTydiConfig
-
     BUILDER_CONFIGS = [
-        MrTydiConfig(
-            # version=VERSION, 
-            name=lang, lang=lang, description=f'Mr TyDi dataset in language {lang}.'
+        datasets.BuilderConfig(
+            version=datasets.Version('1.1.0'),
+            name=lang, description=f'Mr TyDi dataset in language {lang}.'
         ) for lang in languages
     ]
 
@@ -79,14 +69,15 @@ class MrTyDi(datasets.GeneratorBasedBuilder):
         features = datasets.Features({
             'query_id': datasets.Value('string'),
             'query': datasets.Value('string'),
-            'positive_passages': [
-                {'docid': datasets.Value('string'), 'text': datasets.Value('string'),
-                 'title': datasets.Value('string')}
-            ],
-            'negative_passages': [
-                {'docid': datasets.Value('string'), 'text': datasets.Value('string'),
-                 'title': datasets.Value('string')}
-            ],
+
+            'positive_passages': [{
+                'docid': datasets.Value('string'),
+                'text': datasets.Value('string'), 'title': datasets.Value('string')
+            }],
+            'negative_passages': [{
+                'docid': datasets.Value('string'),
+                'text': datasets.Value('string'), 'title': datasets.Value('string'),
+            }],
         })
 
         return datasets.DatasetInfo(
@@ -104,7 +95,7 @@ class MrTyDi(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager):
-        lang = self.config.lang
+        lang = self.config.name
         downloaded_files = dl_manager.download_and_extract(_DATASET_URLS[lang])
 
         splits = [
@@ -130,15 +121,11 @@ class MrTyDi(datasets.GeneratorBasedBuilder):
         return splits
 
     def _generate_examples(self, filepath):
-        '''Yields examples.'''
-        open_handler = gzip.open if filepath.endswith(".gz") else open
-
-        with open_handler(filepath) as f:
+        with open(filepath) as f:
             for i, line in enumerate(f):
                 data = json.loads(line)
+                for feature in ['negative_passages', 'positive_passages']:
+                    if data.get(feature) is None:
+                        data[feature] = []
 
-                if data.get('negative_passages') is None:
-                    data['negative_passages'] = []
-                if data.get('positive_passages') is None:
-                    data['positive_passages'] = []
                 yield data['query_id'], data

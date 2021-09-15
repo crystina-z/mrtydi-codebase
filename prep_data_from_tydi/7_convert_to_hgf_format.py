@@ -10,6 +10,7 @@ from nirtools.ir import load_topic_tsv, load_runs, load_qrels
 
 os_dir = os.path.dirname
 os_join = os.path.join
+TOP_K = 30
 
 file_dir = os_dir(os.path.abspath(__file__)) 
 sys.path.append(os_dir(file_dir))
@@ -62,12 +63,14 @@ def convert_train_queries(topic_tsv, corpus_json_fn, qrel_fn, runfile, output_js
         qid2query = [(qid, query) for qid, query in load_topic_tsv(topic_tsv)] 
         for qid, query in tqdm(qid2query, desc="Parsing Training set"): 
             doc2scores = runs.get(qid, {})
-            if len(doc2scores) == 0:
+            docids = {docid for docid, _ in sorted(doc2scores.items(), key=lambda kv: kv[1], reverse=True)[:TOP_K]}
+
+            if len(docids) == 0:
                 continue
             assert qid in qrels, f"Cannot find {qid} in qrels."
  
             positive_docids = qrels[qid]
-            negative_docids = [docid for docid in doc2scores if docid not in positive_docids]
+            negative_docids = [docid for docid in docids if docid not in positive_docids]
 
             fout.write(json.dumps({
                 "query_id": qid, 
