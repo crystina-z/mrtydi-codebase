@@ -7,17 +7,8 @@ import numpy as np
 
 file_dir = os.path.dirname(__file__) 
 sys.path.append(os.path.dirname(file_dir))
-from utils import index, load_runs, load_qrels, LANGS
+from utils import index, load_runs, load_qrels, find_files, LANGS
 
-
-def find_file(pattern):
-    fns = glob(pattern)
-    # import pdb
-    # pdb.set_trace()
-    if len(fns) != 1:
-        import pdb
-        pdb.set_trace()
-    return fns[0]
 
 
 def sort_docid(docid2score):

@@ -3,6 +3,7 @@ import json
 import gzip
 import json 
 import subprocess
+from glob import glob
 from collections import defaultdict, OrderedDict
 
 import numpy as np
@@ -22,6 +23,12 @@ lang_full2abbr = OrderedDict({
     "english": "en",
 })
 LANGS = lang_full2abbr
+
+
+def find_file(pattern):
+    fns = glob(pattern)
+    assert len(fns) == 1, f"Multiple files are found with pattern {pattern}"
+    return fns[0]
 
 
 def index(lst, element):
