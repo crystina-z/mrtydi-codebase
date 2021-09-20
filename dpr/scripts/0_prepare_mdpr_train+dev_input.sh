@@ -10,5 +10,5 @@ done
 
 
 # for post-processing:
-python tools/print_dpr_input_size.py $output_dir
-python tools/sample_dpr_input_size.py $output_dir
+# python tools/print_dpr_input_size.py $output_dir
+# python tools/sample_dpr_input_size.py $output_dir
