@@ -47,12 +47,9 @@ _DESCRIPTION = 'dataset load script for Mr. TyDi'
 
 _DATASET_URLS = {
     lang: {
-        # 'train': f'https://huggingface.co/datasets/tevatron/mrtydi/resolve/main/{lang}/train.jsonl.gz',
-        # 'dev': f'https://huggingface.co/datasets/tevatron/mrtydi/resolve/main/{lang}/dev.jsonl.gz',
-        # 'test': f'https://huggingface.co/datasets/tevatron/mrtydi/resolve/main/{lang}/test.jsonl.gz',
-        'train': f'/store/scratch/x978zhan/mr-tydi/v1.1/hgf-format-dataset/mrtydi-v1.1-{lang}/train.jsonl.gz',
-        'dev': f'/store/scratch/x978zhan/mr-tydi/v1.1/hgf-format-dataset/mrtydi-v1.1-{lang}/dev.jsonl.gz',
-        'test': f'/store/scratch/x978zhan/mr-tydi/v1.1/hgf-format-dataset/mrtydi-v1.1-{lang}/test.jsonl.gz',
+        'train': f'https://huggingface.co/datasets/tevatron/mrtydi/resolve/main/mrtydi-v1.1-{lang}/train.jsonl.gz',
+        'dev': f'https://huggingface.co/datasets/tevatron/mrtydi/resolve/main/mrtydi-v1.1-{lang}/dev.jsonl.gz',
+        'test': f'https://huggingface.co/datasets/tevatron/mrtydi/resolve/main/mrtydi-v1.1-{lang}/test.jsonl.gz',
     } for lang in languages
 }
 
