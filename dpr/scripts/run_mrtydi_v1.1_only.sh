@@ -6,7 +6,7 @@ base_model="mbert-cased"  # or mbert-uncaed
 dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation"
 
 echo "Converting to dpr format to hf format"
-# sh scripts/2_convert_weights.sh models/dpr_outputs/mytydi-v1.1.mbert-cased.validation/dpr_biencoder.2.17735 && hf_format_model_dir="$dpr_output_dir/hf_format"
+sh scripts/2_convert_weights.sh models/dpr_outputs/mytydi-v1.1.mbert-cased.validation/dpr_biencoder.2.17735 && hf_format_model_dir="$dpr_output_dir/hf_format" && exit
 hf_format_model_dir="$dpr_output_dir/hf_format"
 
 # link the base model file to $hf_format_model_dir

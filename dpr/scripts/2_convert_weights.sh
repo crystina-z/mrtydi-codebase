@@ -2,6 +2,7 @@ model_path=$1
 
 model_dir=$(dirname $model_path)
 
+echo "Processing $model_path"
 python tools/convert_weights.py -q $model_path -c $model_path -o "$model_dir/hf_format"
 
 # example:

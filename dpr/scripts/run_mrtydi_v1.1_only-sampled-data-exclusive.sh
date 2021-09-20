@@ -1,11 +1,12 @@
 set -e
+# exc_lang=$1
 
 base_model="mbert-cased"  # or mbert-uncaed
 
 # dpr_output_dir="models/dpr_outputs/nq"
 # dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation"
 # dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation.sampled-data"
-exc_lang=arabic
+# exc_lang=arabic
 # exc_lang=bengali
 # exc_lang=english
 # exc_lang=finnish
@@ -15,12 +16,15 @@ exc_lang=arabic
 # exc_lang=russian
 # exc_lang=swahili
 # exc_lang=telugu
-# exc_lang=thai
+exc_lang=thai
 
-dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation.sampled-data.no-$exc_lang"
+# dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation.sampled-data.no-$exc_lang"
+dpr_output_dir="models/dpr_outputs/mytydi-v1.1-delimiter-nn.mbert-cased.validation.no-$exc_lang"
+echo $dpr_output_dir 
 
 echo "Converting to dpr format to hf format"
 # sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.2.4000 && exit 
+# sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.2.455 && exit 
 hf_format_model_dir="$dpr_output_dir/hf_format"
 mkdir -p $hf_format_model_dir
 
@@ -46,3 +50,4 @@ done
 
 echo "Start index and searching" 
 sh scripts/3_dindex_and_dsearch.sh $hf_format_model_dir $@
+

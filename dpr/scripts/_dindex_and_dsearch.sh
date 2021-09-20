@@ -5,10 +5,13 @@ nvidia-smi
 source /GW/NeuralIR/work/cuda-10.1_env.sh
 
 version="v1.1"
+
 # todo, rename. this contain the same contents with open-retrieval
 # mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/mrtydi"
 # mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/v0.6"
-mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/${version}"
+# mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/${version}/dataset"
+mrtydi_data_dir="/GW/carpet/nobackup/czhang/dpr/data/mrtydi/v1.1-delimiter-nn/dataset"
+echo "Using data under $mrtydi_data_dir"
 
 results_dir="$hf_model_dir/results"
 index_dir="${results_dir}/faiss_index"
@@ -19,7 +22,11 @@ if [ ! -d $hf_model_dir ]; then
 	echo "Cannot find $hf_model_dir"
 fi
 
-for lang in bengali telugu finnish swahili thai indonesian arabic korean japanese russian english
+for lang in arabic bengali telugu finnish swahili thai indonesian # korean japanese russian english
+# for lang in indonesian korean 
+# for lang in japanese # russian english
+# for lang in russian # 
+# for lang in english
 do
     lang_data_dir="${mrtydi_data_dir}/mrtydi-${version}-${lang}"
     coll_json_dir="${lang_data_dir}/collection"
@@ -40,7 +47,9 @@ do
 
     # 2. search
 
-    for set_name in "dev" "test"
+    # for set_name in "dev" "test"
+    for set_name in "test" # include dev later when we need fusion
+    # for set_name in "dev" # include dev later when we need fusion
     do
         # topic_fn="${mrtydi_data_dir}/${lang}/topic.${set_name}.tsv"
         topic_fn="${lang_data_dir}/topic.${set_name}.tsv"

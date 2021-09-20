@@ -4,10 +4,17 @@ base_model="mbert-cased"  # or mbert-uncaed
 
 # dpr_output_dir="models/dpr_outputs/nq"
 # dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation"
-dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation.sampled-data"
+# dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation.sampled-data"
+# dpr_output_dir="models/dpr_outputs/mytydi-v1.1.mbert-cased.validation.sampled-data-727"
+dpr_output_dir="models/dpr_outputs/mytydi-v1.1-delimiter-nn.mbert-cased.validation.sampled-data-727"
 
 echo "Converting to dpr format to hf format"
-# sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.2.4400 && hf_format_model_dir="$dpr_output_dir/hf_format"
+# sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.2.4400 && exit 
+# sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.2.3999 && exit 
+# sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.0.3999 && exit 
+# sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.2.500 && exit 
+# sh scripts/2_convert_weights.sh $dpr_output_dir/dpr_biencoder.2.63 && exit 
+
 hf_format_model_dir="$dpr_output_dir/hf_format"
 mkdir -p $hf_format_model_dir
 
