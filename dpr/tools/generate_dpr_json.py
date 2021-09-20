@@ -63,7 +63,7 @@ def main():
 	topic_fn = os_join(lang_dir, "topic.tsv")
 	folds_fn = os_join(lang_dir, "folds.json")
 	qrels_fn = os_join(lang_dir, "qrels.txt")
-	coll_fn = os_join(lang_dir, "collection", "docs.jsonl")
+	coll_fn = os_join(lang_dir, "collection", "docs.jsonl.gz")
 	runfile_dir = os_join(open_retrieval_dir, os.pardir, "bm25-runfiles", lang)
 
 	assert all(map(os.path.exists, [topic_fn, folds_fn, qrels_fn, coll_fn]))

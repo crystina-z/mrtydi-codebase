@@ -19,14 +19,16 @@ sys.path.append(PACKAGE_PATH)
 from utils import LANGS, load_runs, load_qrels, load_topic_tsv, load_collection_jsonl 
 
 random.seed(123)
-N_Q = 800
+# N_Q = 800
+N_Q = 727
 
 
 def main():
     dpr_input_dir = sys.argv[1]
     for lang in LANGS:
-        json_fn = os_join(dpr_input_dir, lang, "train.json")
-        output_json_fn = os_join(dpr_input_dir, lang, "train.sampled.json")
+        # json_fn = os_join(dpr_input_dir, lang, "train.800.json")
+        json_fn = os_join(dpr_input_dir, lang, "train.sampled.800.json")
+        output_json_fn = os_join(dpr_input_dir, lang, f"train.sampled.{N_Q}.json")
         assert os.path.exists(json_fn)
 
         dpr_inputs = json.load(open(json_fn))
