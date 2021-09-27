@@ -177,7 +177,7 @@ def scatter():
     plt.xlim(x_range[0] - 0.05, x_range[-1] + 0.15)
     plt.ylim(y_range[0] - 0.15, y_range[-1] + 0.05)
 
-    plt.grid(linestyle=":", alpha=0.4)
+    plt.grid(linestyle=":", alpha=0.7)
     plt.xlabel("MRR@100 of mDPR normalized to BM25 (tuned)")
     plt.ylabel("MRR@100 of sparse-dense hybrid normalized to BM25 (tuned)")
     # plt.tight_layout()
@@ -186,5 +186,5 @@ def scatter():
 
 
 if __name__ == "__main__":
-    barplot()
-    # scatter()
+    # barplot()
+    scatter()
