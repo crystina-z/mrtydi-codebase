@@ -97,7 +97,7 @@ def barplot():
 
     plt.legend()
     plt.xticks(xs, langs)
-    plt.ylabel("MRR normalized to BM25 (tuned)")
+    plt.ylabel("MRR@100 normalized to BM25 (tuned)")
     set_size(*boxsize)
     # plt.tight_layout()
     plt.savefig(f"{plot_dir}/relative_score_bars-top100.pdf")
@@ -138,7 +138,8 @@ def scatter():
     m, b = np.polyfit(x_s, y_s, 1)
 
     # plot linear regression
-    x_s_to_plot = np.concatenate(([0.0], x_s, [x_s.max() + 0.1]))
+    # x_s_to_plot = np.concatenate(([0.0], x_s, [x_s.max() + 0.1]))
+    x_s_to_plot = np.concatenate(([0.05], x_s, [x_s.max() + 0.05]))
     lr_y_s_to_plot = m * x_s_to_plot + b
     plt.plot(
         x_s_to_plot, lr_y_s_to_plot, 
@@ -167,8 +168,18 @@ def scatter():
     file_dir = os.path.dirname(__file__)
     plot_dir = os.path.join(file_dir, "plots")
 
-    plt.xlabel("MRR of mDPR normalized to BM25 (tuned)")
-    plt.ylabel("MRR of sparse-dense hybrid normalized to BM25 (tuned)")
+    x_range = np.arange(0, 1.2, 0.2)
+    y_range = np.arange(1, 2.1, 0.2)
+    x_range_str = list(map(lambda f: "%.1f" % f, x_range))
+    y_range_str = list(map(lambda f: "%.1f" % f, y_range))
+    plt.xticks(x_range, x_range_str)
+    plt.yticks(y_range, y_range_str)
+    plt.xlim(x_range[0] - 0.05, x_range[-1] + 0.15)
+    plt.ylim(y_range[0] - 0.15, y_range[-1] + 0.05)
+
+    plt.grid(linestyle=":", alpha=0.4)
+    plt.xlabel("MRR@100 of mDPR normalized to BM25 (tuned)")
+    plt.ylabel("MRR@100 of sparse-dense hybrid normalized to BM25 (tuned)")
     # plt.tight_layout()
     set_size(*boxsize)
     plt.savefig(f"{plot_dir}/relative_score_scatter-top100.pdf")
