@@ -71,6 +71,9 @@ def convert_train_queries(topic_tsv, corpus_json_fn, qrel_fn, runfile, output_js
  
             positive_docids = qrels[qid]
             negative_docids = [docid for docid in docids if docid not in positive_docids]
+            if len(negative_docids) == 0:
+                print(f"Query {qid} has {len(docids)} docuemnts in the top-{TOP_K} which contains no negative sample. Skip.")
+                continue
 
             fout.write(json.dumps({
                 "query_id": qid, 
@@ -80,15 +83,26 @@ def convert_train_queries(topic_tsv, corpus_json_fn, qrel_fn, runfile, output_js
             }, ensure_ascii=False) + "\n")
 
 
-def convert_dev_test_queries(topic_tsv, output_json_fn):
+def convert_dev_test_queries(topic_tsv, qrel_fn, output_json_fn):
     """
     Input format: "qid\tquery\n"
     Output format: {"query_id": qid, "query": query}
     """
+    qrels = load_qrels(qrel_fn)
+
     with open(output_json_fn, "w") as fout:
         for qid, query in load_topic_tsv(topic_tsv):
-            fout.write(json.dumps({"query_id": qid, "query": query}, ensure_ascii=False) + "\n")
- 
+            if qid not in qrels:
+                raise ValueError(f"Cannot find {qid} in the qrels file {qrel_fn}.")
+
+            fout.write(json.dumps({
+                "query_id": qid, 
+                "query": query,
+                "positive_passages": [{
+                    "docid": docid, "title": "", "text": "",
+                } for docid in qrels[qid]]
+            }, ensure_ascii=False) + "\n")
+
 
 # helpers
 def get_collection_json(coll_dir):
@@ -107,6 +121,7 @@ if __name__ == "__main__":
         exit(-1)
 
     version = "v1.1"
+    prep_corpus, prep_train, prep_devtest = True, True, True
 
     mrtydi_dataset_dir = sys.argv[1]
     lang = sys.argv[2]
@@ -122,16 +137,25 @@ if __name__ == "__main__":
     corpus_json_dir = os_join(lang_dir, "collection")
     corpus_json_fn = get_collection_json(corpus_json_dir)
 
-    convert_corpus(corpus_json_fn, os_join(lang_outp_dir, "corpus.jsonl"))
-    convert_train_queries(
-        topic_tsv = os_join(lang_dir, "topic.train.tsv"),
-        corpus_json_fn = os_join(lang_dir, corpus_json_fn),
-        qrel_fn = os_join(lang_dir, "qrels.train.txt"),
-        runfile = get_bm25_train_file(lang_bm25_dir),
-        output_json_fn = os_join(lang_outp_dir, "train.jsonl")
-    )
-    for set_name in ["dev", "test"]:
-        convert_dev_test_queries(
-            topic_tsv = os_join(lang_dir, f"topic.{set_name}.tsv"),
-            output_json_fn = os_join(lang_outp_dir, f"{set_name}.jsonl")
+    # mr-tydi corpus
+    if prep_corpus:
+        convert_corpus(corpus_json_fn, os_join(lang_outp_dir, "corpus.jsonl"))
+
+    # mr-tydi train
+    if prep_train:
+        convert_train_queries(
+            topic_tsv = os_join(lang_dir, "topic.train.tsv"),
+            corpus_json_fn = os_join(lang_dir, corpus_json_fn),
+            qrel_fn = os_join(lang_dir, "qrels.train.txt"),
+            runfile = get_bm25_train_file(lang_bm25_dir),
+            output_json_fn = os_join(lang_outp_dir, "train.jsonl")
         )
+
+    # mr-tydi dev and test 
+    if prep_devtest:
+        for set_name in ["dev", "test"]:
+            convert_dev_test_queries(
+                topic_tsv = os_join(lang_dir, f"topic.{set_name}.tsv"),
+                qrel_fn = os_join(lang_dir, f"qrels.{set_name}.txt"),
+                output_json_fn = os_join(lang_outp_dir, f"{set_name}.jsonl")
+            )
